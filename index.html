@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mi Proyecto</title>
+  <meta name="description" content="Descripción breve de tu proyecto" />
+
+  <!-- Open Graph / SEO básico -->
+  <meta property="og:title" content="Mi Proyecto" />
+  <meta property="og:description" content="Descripción breve de tu proyecto" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://<tu-usuario>.github.io/<tu-repo>/" />
+  <meta property="og:image" content="assets/og-image.png" />
+
+  <!-- Favicon opcional -->
+  <link rel="icon" href="assets/favicon.png" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#">MiProyecto</a>
+      <nav class="nav" aria-label="Principal">
+        <a href="#inicio">Inicio</a>
+        <a href="#caracteristicas">Características</a>
+        <a href="#acerca">Acerca</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenido">
+    <section id="inicio" class="hero container">
+      <h1>Lanza tu proyecto con una base sólida</h1>
+      <p>Template simple, accesible y responsivo para empezar rápido en GitHub Pages.</p>
+      <div class="cta-row">
+        <a class="btn" href="#caracteristicas">Ver características</a>
+        <a class="btn btn-secondary" href="#contacto">Contáctame</a>
+      </div>
+    </section>
+
+    <section id="caracteristicas" class="section container">
+      <h2>Características</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>Rápido</h3>
+          <p>HTML y CSS puros. Sin dependencias.</p>
+        </article>
+        <article class="card">
+          <h3>Responsivo</h3>
+          <p>Diseño fluido que se adapta a cualquier pantalla.</p>
+        </article>
+        <article class="card">
+          <h3>Accesible</h3>
+          <p>Etiquetas semánticas y enlace para saltar al contenido.</p>
+        </article>
+        <article class="card">
+          <h3>Listo para SEO</h3>
+          <p>Metadatos básicos y Open Graph incluidos.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="acerca" class="section container">
+      <h2>Acerca</h2>
+      <p>
+        Este template es un punto de partida. Edita el texto, agrega secciones,
+        imágenes en <code>/assets</code> y publica en minutos.
+      </p>
+    </section>
+
+    <section id="contacto" class="section container">
+      <h2>Contacto</h2>
+      <form class="form" name="contacto" method="post" data-netlify="true">
+        <input type="hidden" name="form-name" value="contacto" />
+        <label>
+          Nombre
+          <input type="text" name="nombre" required />
+        </label>
+        <label>
+          Email
+          <input type="email" name="email" required />
+        </label>
+        <label>
+          Mensaje
+          <textarea name="mensaje" rows="5" required></textarea>
+        </label>
+        <button class="btn" type="submit">Enviar</button>
+      </form>
+      <p class="muted">* El formulario es estático; puedes usar servicios como Netlify Forms o Formspree.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>© <span id="year"></span> MiProyecto · Hecho con ♥</p>
+      <a href="#inicio">Volver arriba</a>
+    </div>
+  </footer>
+
+  <script>
+    // Año dinámico
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
