@@ -1,4 +1,4 @@
-Country,Income grouop,Year,Area,Age,Males Overweight (BMI 25-29.9kg/m²),Males Obesity (BMI ≥30kg/m²),Females Overweight (BMI 25-29.9kg/m²),Females Obesity (BMI ≥30kg/m²),All adults Overweight (BMI 25-29.9kg/m²),All adults Obesity (BMI ≥30kg/m²),iso_alpha
+Country,Income grouop,Year,Area,Age,Males_Overweight,Males_Obesity,Females_Overweight,Females_Obesity,All_adults_Overweight,All_adults_Obesity,iso_alpha
 Afghanistan,Low income,2018,National,18-69,25.9,11.9,25.6,23.5,25.8,17.0,AFG
 Albania,Upper-middle income,2022,National,16+,51.0,11.3,37.5,13.4,44.2,12.4,ALB
 Algeria,Upper-middle income,2016-2017,National,18-69,34.2,14.1,33.2,30.1,33.8,21.8,DZA

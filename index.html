@@ -2,20 +2,58 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Página Principal</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Mapa de Calor Mundial</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: white;
+      color: #333;
+    }
+    #mapa {
+      width: 100%;
+      height: 100vh;
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <nav>
-      <a href="index.html">Principal</a>
-      <a href="datos.html">Datos</a>
-      <a href="info.html">Info</a>
-    </nav>
-  </header>
-  <main>
-    <h1>Bienvenido a la Página Principal</h1>
-    <p>Aquí puedes agregar una introducción o descripción general.</p>
-  </main>
+  <div id="mapa"></div>
+
+  <script>
+    // Leer el JSON generado en Python
+    fetch('datos/datos.json')
+      .then(response => response.json())
+      .then(data => {
+        const locations = data.map(d => d.iso_alpha); // ISO-3
+        const z = data.map(d => d.All_adults_Obesity);             // valores numéricos
+        const text = data.map(d => d.Country);        // nombre de país
+
+        const trace = {
+          type: 'choropleth',
+          locationmode: 'ISO-3',
+          locations: locations,
+          z: z,
+          text: text,
+          colorscale: 'Viridis',
+          colorbar: { title: 'Valor' }
+        };
+
+        const layout = {
+          title: 'Mapa de Calor Mundial',
+          geo: { projection: { type: 'natural earth' } }
+        };
+
+        Plotly.newPlot('mapa', [trace], layout);
+
+        // Evento de clic
+        const mapaDiv = document.getElementById('mapa');
+        mapaDiv.on('plotly_click', function(eventData) {
+          const punto = eventData.points[0];
+          alert(`Hiciste click en ${punto.text} con valor ${punto.z}`);
+        });
+      });
+  </script>
 </body>
 </html>
+
