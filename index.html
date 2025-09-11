@@ -26,7 +26,7 @@
       .then(response => response.json())
       .then(data => {
         const locations = data.map(d => d.iso_alpha);   // ISO-3
-        const z = data.map(d => d["All_adults_Obesity (%)"]);  // valores numéricos
+        const z = data.map(d => d.All_adults_Obesity);  // valores numéricos
         const text = data.map(d => d.Country);          // nombre de país
 
         const trace = {
