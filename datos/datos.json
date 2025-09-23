@@ -111,9 +111,9 @@
     "Country":"Austria",
     "iso_alpha":"AUT",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":34.4,
-    "All_adults_Obesity":17.4,
+    "Age":"18+",
+    "All_adults_Overweight":35.0,
+    "All_adults_Obesity":17.7,
     "All_adults_Diabetes":5.4
   },
   {
@@ -174,9 +174,9 @@
     "Country":"Belgium",
     "iso_alpha":"BEL",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":32.7,
-    "All_adults_Obesity":15.5,
+    "Age":"18+",
+    "All_adults_Overweight":33.2,
+    "All_adults_Obesity":15.8,
     "All_adults_Diabetes":5.9
   },
   {
@@ -282,9 +282,9 @@
     "Country":"Bulgaria",
     "iso_alpha":"BGR",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":41.4,
-    "All_adults_Obesity":11.5,
+    "Age":"18+",
+    "All_adults_Overweight":42.0,
+    "All_adults_Obesity":11.7,
     "All_adults_Diabetes":7.4
   },
   {
@@ -516,9 +516,9 @@
     "Country":"Croatia",
     "iso_alpha":"HRV",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":40.7,
-    "All_adults_Obesity":16.5,
+    "Age":"18+",
+    "All_adults_Overweight":41.3,
+    "All_adults_Obesity":16.7,
     "All_adults_Diabetes":10.5
   },
   {
@@ -534,18 +534,18 @@
     "Country":"Cyprus",
     "iso_alpha":"CYP",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":34.0,
-    "All_adults_Obesity":13.3,
+    "Age":"18+",
+    "All_adults_Overweight":34.6,
+    "All_adults_Obesity":13.8,
     "All_adults_Diabetes":10.0
   },
   {
     "Country":"Czechia",
     "iso_alpha":"CZE",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":38.0,
-    "All_adults_Obesity":17.4,
+    "Age":"18+",
+    "All_adults_Overweight":38.7,
+    "All_adults_Obesity":17.8,
     "All_adults_Diabetes":7.6
   },
   {
@@ -651,9 +651,9 @@
     "Country":"Estonia",
     "iso_alpha":"EST",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":34.7,
-    "All_adults_Obesity":21.7,
+    "Age":"18+",
+    "All_adults_Overweight":35.2,
+    "All_adults_Obesity":22.1,
     "All_adults_Diabetes":6.9
   },
   {
@@ -795,9 +795,9 @@
     "Country":"Greece",
     "iso_alpha":"GRC",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":42.6,
-    "All_adults_Obesity":11.8,
+    "Age":"18+",
+    "All_adults_Overweight":42.9,
+    "All_adults_Obesity":12.0,
     "All_adults_Diabetes":8.0
   },
   {
@@ -885,9 +885,9 @@
     "Country":"Hungary",
     "iso_alpha":"HUN",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":35.7,
-    "All_adults_Obesity":21.8,
+    "Age":"18+",
+    "All_adults_Overweight":36.2,
+    "All_adults_Obesity":22.2,
     "All_adults_Diabetes":8.3
   },
   {
@@ -1092,9 +1092,9 @@
     "Country":"Latvia",
     "iso_alpha":"LVA",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":36.4,
-    "All_adults_Obesity":22.8,
+    "Age":"18+",
+    "All_adults_Overweight":37.1,
+    "All_adults_Obesity":23.3,
     "All_adults_Diabetes":7.1
   },
   {
@@ -1155,9 +1155,9 @@
     "Country":"Luxembourg",
     "iso_alpha":"LUX",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":32.5,
-    "All_adults_Obesity":16.9,
+    "Age":"18+",
+    "All_adults_Overweight":32.7,
+    "All_adults_Obesity":17.0,
     "All_adults_Diabetes":5.8
   },
   {
@@ -1209,9 +1209,9 @@
     "Country":"Malta",
     "iso_alpha":"MLT",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":36.1,
-    "All_adults_Obesity":25.8,
+    "Age":"18+",
+    "All_adults_Overweight":36.3,
+    "All_adults_Obesity":26.1,
     "All_adults_Diabetes":10.0
   },
   {
@@ -1497,9 +1497,9 @@
     "Country":"Norway",
     "iso_alpha":"NOR",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":36.3,
-    "All_adults_Obesity":16.6,
+    "Age":"18+",
+    "All_adults_Overweight":36.7,
+    "All_adults_Obesity":16.8,
     "All_adults_Diabetes":4.8
   },
   {
@@ -1623,9 +1623,9 @@
     "Country":"Portugal",
     "iso_alpha":"PRT",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":36.7,
-    "All_adults_Obesity":15.6,
+    "Age":"18+",
+    "All_adults_Overweight":37.2,
+    "All_adults_Obesity":15.8,
     "All_adults_Diabetes":10.5
   },
   {
@@ -1659,9 +1659,9 @@
     "Country":"Romania",
     "iso_alpha":"ROU",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":48.8,
-    "All_adults_Obesity":10.1,
+    "Age":"18+",
+    "All_adults_Overweight":49.4,
+    "All_adults_Obesity":10.3,
     "All_adults_Diabetes":7.5
   },
   {
@@ -1776,9 +1776,9 @@
     "Country":"Serbia",
     "iso_alpha":"SRB",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":40.3,
-    "All_adults_Obesity":11.5,
+    "Age":"18+",
+    "All_adults_Overweight":40.9,
+    "All_adults_Obesity":11.7,
     "All_adults_Diabetes":10.5
   },
   {
@@ -1821,18 +1821,18 @@
     "Country":"Slovakia",
     "iso_alpha":"SVK",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":40.7,
-    "All_adults_Obesity":16.8,
+    "Age":"18+",
+    "All_adults_Overweight":41.3,
+    "All_adults_Obesity":17.1,
     "All_adults_Diabetes":7.1
   },
   {
     "Country":"Slovenia",
     "iso_alpha":"SVN",
     "Year":"2022",
-    "Age":"16+",
-    "All_adults_Overweight":37.7,
-    "All_adults_Obesity":17.8,
+    "Age":"18+",
+    "All_adults_Overweight":37.8,
+    "All_adults_Obesity":17.9,
     "All_adults_Diabetes":7.0
   },
   {
