@@ -1,6 +1,6 @@
 # Proyecto de Visualización de la Información
 
-Trabajo sobre ...
+Trabajo sobre la Obesidad y las enfermedades que conlleva
 
 ### Integrantes
 
@@ -11,6 +11,7 @@ Trabajo sobre ...
 ### Links
 
 - [Obesidad en adultos](https://data.worldobesity.org/tables/prevalence-of-adult-overweight-obesity-2)
+- [Diabetes en adultos](https://data.worldbank.org/indicator/SH.STA.DIAB.ZS?end=2024&start=2000&view=map)
 - [Página web del proyecto](https://jimenez73.github.io/Proyecto_InfoVis_Grupo15/)
 
 ### To do
