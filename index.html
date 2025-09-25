@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Obesidad vs. Diabetes por país</title>
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
-    <style>
+  <style>
     body {
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
       margin: 0;
       padding: 0.5rem;
-      background: white;   /* 🔽 fondo de toda la página blanco */
-      color: #111;         /* color de texto */
-      text-align: center;  /* 🔽 centra todos los textos por defecto */
+      background: white;
+      color: #111;
+      text-align: center;
     }
     h1 {
       margin: 0;
@@ -22,9 +22,7 @@
     #chart {
       width: 90%;
       height: 90vh;
-      margin: 0;
-      margin: 0 auto
-      
+      margin: 0 auto;
     }
     pre {
       background: #fff;
@@ -32,491 +30,157 @@
       padding: .75rem;
       border-radius: .5rem;
       overflow: auto;
-      text-align: left; /* mantener <pre> alineado a la izquierda */
+      text-align: left;
     }
   </style>
-</head>
 </head>
 <body>
 
   <h1 style="margin:0 0 .5rem;">Obesidad (orden) vs. Diabetes (altura) por país</h1>
+  <div id="chart"></div>
+  <div style="max-width: 800px; margin: 1rem auto; text-align: left; font-size: 0.9rem; color: #333;">
+    <p><strong>Notas:</strong></p>
+    <ul>
+      <li>⬅️ Al inicio (izquierda) están los países con <strong>menor obesidad y diabetes</strong>.</li>
+      <li>➡️ Al final (derecha) están los países con <strong>mayor obesidad y diabetes</strong>.</li>
+      <li>⭐ Algunos países como Malasia presentan <em>más diabetes de lo esperado</em> en relación a su obesidad.</li>
+    </ul>
+  </div>
 
-  <!-- 🔽 Pega aquí tu JSON 🔽 -->
-  <script id="dataset" type="application/json">
-  [
-  {
-    "Country":"Vietnam",
-    "Year":"2021",
-    "Age":"18-69",
-    "All_adults_Obesity":2.1,
-    "All_adults_Diabetes":3.4
-  },
-  {
-    "Country":"Rwanda",
-    "Year":"2021-2022",
-    "Age":"18-69",
-    "All_adults_Obesity":4.3,
-    "All_adults_Diabetes":2.1
-  },
-  {
-    "Country":"Japan",
-    "Year":"2023",
-    "Age":"20+",
-    "All_adults_Obesity":4.6,
-    "All_adults_Diabetes":8.1
-  },
-  {
-    "Country":"Niger",
-    "Year":"2021",
-    "Age":"18-69",
-    "All_adults_Obesity":4.9,
-    "All_adults_Diabetes":4.1
-  },
-  {
-    "Country":"Nepal",
-    "Year":"2022",
-    "Age":"20-49",
-    "All_adults_Obesity":7.2,
-    "All_adults_Diabetes":7.7
-  },
-  {
-    "Country":"South Korea",
-    "Year":"2022",
-    "Age":"20+",
-    "All_adults_Obesity":7.28,
-    "All_adults_Diabetes":9.6
-  },
-  {
-    "Country":"Uganda",
-    "Year":"2023",
-    "Age":"18-69",
-    "All_adults_Obesity":9.3,
-    "All_adults_Diabetes":2.2
-  },
-  {
-    "Country":"Philippines",
-    "Year":"2021-2022",
-    "Age":"20-59",
-    "All_adults_Obesity":10.0,
-    "All_adults_Diabetes":7.5
-  },
-  {
-    "Country":"Romania",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":10.3,
-    "All_adults_Diabetes":7.5
-  },
-  {
-    "Country":"Italy",
-    "Year":"2023-2024",
-    "Age":"18-69",
-    "All_adults_Obesity":10.4,
-    "All_adults_Diabetes":7.7
-  },
-  {
-    "Country":"Kenya",
-    "Year":"2022",
-    "Age":"20-49",
-    "All_adults_Obesity":10.8,
-    "All_adults_Diabetes":3.1
-  },
-  {
-    "Country":"Bulgaria",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":11.7,
-    "All_adults_Diabetes":7.4
-  },
-  {
-    "Country":"Greece",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":12.0,
-    "All_adults_Diabetes":8.0
-  },
-  {
-    "Country":"Switzerland",
-    "Year":"2022",
-    "Age":"16+",
-    "All_adults_Obesity":13.4,
-    "All_adults_Diabetes":5.3
-  },
-  {
-    "Country":"Ghana",
-    "Year":"2023",
-    "Age":"18-69",
-    "All_adults_Obesity":13.4,
-    "All_adults_Diabetes":2.7
-  },
-  {
-    "Country":"Poland",
-    "Year":"2025",
-    "Age":"20+",
-    "All_adults_Obesity":13.9,
-    "All_adults_Diabetes":8.1
-  },
-  {
-    "Country":"Cabo Verde",
-    "Year":"2020",
-    "Age":"18-69",
-    "All_adults_Obesity":14.3,
-    "All_adults_Diabetes":6.8
-  },
-  {
-    "Country":"France",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":15.2,
-    "All_adults_Diabetes":6.5
-  },
-  {
-    "Country":"Spain",
-    "Year":"2023-2024",
-    "Age":"18+",
-    "All_adults_Obesity":15.2,
-    "All_adults_Diabetes":9.7
-  },
-  {
-    "Country":"Belgium",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":15.8,
-    "All_adults_Diabetes":5.9
-  },
-  {
-    "Country":"Portugal",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":15.8,
-    "All_adults_Diabetes":10.5
-  },
-  {
-    "Country":"Netherlands",
-    "Year":"2024",
-    "Age":"20+",
-    "All_adults_Obesity":16.0,
-    "All_adults_Diabetes":5.0
-  },
-  {
-    "Country":"Croatia",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":16.7,
-    "All_adults_Diabetes":10.5
-  },
-  {
-    "Country":"Norway",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":16.8,
-    "All_adults_Diabetes":4.8
-  },
-  {
-    "Country":"Luxembourg",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":17.0,
-    "All_adults_Diabetes":5.8
-  },
-  {
-    "Country":"Slovakia",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":17.1,
-    "All_adults_Diabetes":7.1
-  },
-  {
-    "Country":"Austria",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":17.7,
-    "All_adults_Diabetes":5.4
-  },
-  {
-    "Country":"Czechia",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":17.8,
-    "All_adults_Diabetes":7.6
-  },
-  {
-    "Country":"Slovenia",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":17.9,
-    "All_adults_Diabetes":7.0
-  },
-  {
-    "Country":"Sweden",
-    "Year":"2024",
-    "Age":"16-84",
-    "All_adults_Obesity":18.2,
-    "All_adults_Diabetes":5.8
-  },
-  {
-    "Country":"Denmark",
-    "Year":"2023",
-    "Age":"16+",
-    "All_adults_Obesity":18.7,
-    "All_adults_Diabetes":6.4
-  },
-  {
-    "Country":"Liberia",
-    "Year":"2022",
-    "Age":"18-69",
-    "All_adults_Obesity":19.9,
-    "All_adults_Diabetes":9.2
-  },
-  {
-    "Country":"Lithuania",
-    "Year":"2022",
-    "Age":"16+",
-    "All_adults_Obesity":20.3,
-    "All_adults_Diabetes":7.5
-  },
-  {
-    "Country":"Malaysia",
-    "Year":"2023",
-    "Age":"18+",
-    "All_adults_Obesity":21.8,
-    "All_adults_Diabetes":21.1
-  },
-  {
-    "Country":"Estonia",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":22.1,
-    "All_adults_Diabetes":6.9
-  },
-  {
-    "Country":"Hungary",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":22.2,
-    "All_adults_Diabetes":8.3
-  },
-  {
-    "Country":"Latvia",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":23.3,
-    "All_adults_Diabetes":7.1
-  },
-  {
-    "Country":"Brazil",
-    "Year":"2023",
-    "Age":"18+",
-    "All_adults_Obesity":24.3,
-    "All_adults_Diabetes":10.6
-  },
-  {
-    "Country":"Eswatini",
-    "Year":"2024",
-    "Age":"18-69",
-    "All_adults_Obesity":24.7,
-    "All_adults_Diabetes":7.9
-  },
-  {
-    "Country":"Iran",
-    "Year":"2021",
-    "Age":"18+",
-    "All_adults_Obesity":25.0,
-    "All_adults_Diabetes":9.0
-  },
-  {
-    "Country":"Malta",
-    "Year":"2022",
-    "Age":"18+",
-    "All_adults_Obesity":26.1,
-    "All_adults_Diabetes":10.0
-  },
-  {
-    "Country":"Libya",
-    "Year":"2022-2023",
-    "Age":"18-69",
-    "All_adults_Obesity":28.9,
-    "All_adults_Diabetes":15.8
-  },
-  {
-    "Country":"Trinidad and Tobago",
-    "Year":"2024",
-    "Age":"18-69",
-    "All_adults_Obesity":31.6,
-    "All_adults_Diabetes":12.4
-  },
-  {
-    "Country":"Australia",
-    "Year":"2022-2023",
-    "Age":"18+",
-    "All_adults_Obesity":31.7,
-    "All_adults_Diabetes":7.4
-  },
-  {
-    "Country":"South Africa",
-    "Year":"2021-2022",
-    "Age":"18+",
-    "All_adults_Obesity":32.1,
-    "All_adults_Diabetes":7.2
-  },
-  {
-    "Country":"Cayman Islands",
-    "Year":"2023",
-    "Age":"18-69",
-    "All_adults_Obesity":32.7,
-    "All_adults_Diabetes":11.1
-  },
-  {
-    "Country":"Qatar",
-    "Year":"2023",
-    "Age":"18-69",
-    "All_adults_Obesity":33.4,
-    "All_adults_Diabetes":24.6
-  },
-  {
-    "Country":"Kuwait",
-    "Year":"2024",
-    "Age":"19+",
-    "All_adults_Obesity":33.8,
-    "All_adults_Diabetes":25.6
-  },
-  {
-    "Country":"New Caledonia",
-    "Year":"2021",
-    "Age":"18-64",
-    "All_adults_Obesity":38.4,
-    "All_adults_Diabetes":22.0
-  },
-  {
-    "Country":"Mexico",
-    "Year":"2023",
-    "Age":"20+",
-    "All_adults_Obesity":38.9,
-    "All_adults_Diabetes":16.4
-  },
-  {
-    "Country":"United States",
-    "Year":"2021-2023",
-    "Age":"20+",
-    "All_adults_Obesity":40.3,
-    "All_adults_Diabetes":13.7
-  },
-  {
-    "Country":"Aruba",
-    "Year":"2023",
-    "Age":"18-69",
-    "All_adults_Obesity":45.8,
-    "All_adults_Diabetes":4.6
-  }
-]
-  </script>
-  <!-- 🔼 FIN JSON 🔼 -->
-
-  <div id="chart" style="width: 90%;justify-content: center;"></div>
-
-  <script>
+<script>
 (function () {
-  const raw = document.getElementById("dataset").textContent.trim();
-  let data;
-  try {
-    data = JSON.parse(raw);
-  } catch (e) {
-    document.getElementById("chart").innerHTML = "<pre>⚠️ JSON inválido.</pre>";
-    return;
-  }
+  fetch("datos/datos.json")
+    .then(response => response.json())
+    .then(data => {
+      const rows = data
+        .map(d => ({
+          country: String(d.Country ?? "").trim(),
+          obesity: Number(d.All_adults_Obesity),
+          diabetes: Number(d.All_adults_Diabetes)
+        }))
+        .filter(d => d.country && Number.isFinite(d.obesity) && Number.isFinite(d.diabetes));
 
-  const rows = data
-    .map(d => ({
-      country: String(d.Country ?? "").trim(),
-      obesity: Number(d.All_adults_Obesity),
-      diabetes: Number(d.All_adults_Diabetes)
-    }))
-    .filter(d => d.country && Number.isFinite(d.obesity) && Number.isFinite(d.diabetes));
+      if (rows.length === 0) return;
 
-  if (rows.length === 0) return;
+      rows.sort((a, b) => a.obesity - b.obesity);
 
-  // Ordenar por obesidad
-  rows.sort((a, b) => a.obesity - b.obesity);
+      const xLabels = rows.map(r => r.country);
+      const yValues = rows.map(r => r.diabetes);
+      const xValues = rows.map(r => r.obesity);
 
-  const xLabels = rows.map(r => r.country);
-  const yValues = rows.map(r => r.diabetes);
-  const xValues = rows.map(r => r.obesity);
+      const n = xValues.length;
+      const meanX = xValues.reduce((s, v) => s + v, 0) / n;
+      const meanY = yValues.reduce((s, v) => s + v, 0) / n;
 
-  // --- Calcular regresión lineal y = a + b*x ---
-  const n = xValues.length;
-  const meanX = xValues.reduce((s, v) => s + v, 0) / n;
-  const meanY = yValues.reduce((s, v) => s + v, 0) / n;
+      let num = 0, den = 0;
+      for (let i = 0; i < n; i++) {
+        num += (xValues[i] - meanX) * (yValues[i] - meanY);
+        den += (xValues[i] - meanX) ** 2;
+      }
+      const b = num / den;
+      const a = meanY - b * meanX;
 
-  let num = 0, den = 0;
-  for (let i = 0; i < n; i++) {
-    num += (xValues[i] - meanX) * (yValues[i] - meanY);
-    den += (xValues[i] - meanX) ** 2;
-  }
-  const b = num / den;
-  const a = meanY - b * meanX;
+      const minX = Math.min(...xValues);
+      const maxX = Math.max(...xValues);
+      const yMin = a + b * minX;
+      const yMax = a + b * maxX;
 
-  // extremos para la recta
-  const minX = Math.min(...xValues);
-  const maxX = Math.max(...xValues);
-  const yMin = a + b * minX;
-  const yMax = a + b * maxX;
+      // const BuPu = [
+      //   "#f7f7f7",
+      //   "#ece2f0",
+      //   "#d0b7da",
+      //   "#c994c7",
+      //   "#df65b0",
+      //   "#e7298a",
+      //   "#ce1256"
+      // ];
 
-  // --- Barras (sin cambios relevantes) ---
-const traceBars = {
-  type: "bar",
-  x: xLabels,
-  y: yValues,
-  marker: { color: "#1f77b4", line: { width: 1 } },
-  hoverinfo: "skip"
-};
+      // const colors = xValues.map(v => {
+      //     const norm = (v - minX) / (maxX - minX);
+      //     const idx = Math.floor(norm * (BuPu.length - 1)); // índice del color
+      //     return BuPu[idx];
+      //   });
 
-// extremos regresión ya calculados: yMin, yMax
+      const traceBars = {
+        type: "bar",
+        x: xLabels,
+        y: yValues,
+        marker: {
+          color: xValues,
+          colorscale: "Turbo",
+          colorbar: {
+            title: "Obesidad (%)",
+            titleside: "bottom",
+            orientation: "h",
+            x: 0.5,
+            y: -0.15,
+            xanchor: "center",
+            yanchor: "top"
+          },
+          line: { width: 0.5, color: "#333" }
+        },
+        hoverinfo: "skip"
+      };
 
-const layout = {
-  margin: { t: 20, r: 30, b: 150, l: 60 }, // más espacio abajo
-  xaxis: {
-    title: "País (ordenado por Obesidad, de menor a mayor)",
-    tickangle: -60,
-    tickfont: { size: 10 },
-    automargin: true,
-    type: "category",
-    categoryorder: "array",
-    categoryarray: xLabels,
+      const layout = {
+        margin: { t: 20, r: 30, b: 180, l: 60 },
+        xaxis: {
+          title: "País (ordenado por Obesidad, de menor a mayor)",
+          tickangle: -60,
+          tickfont: { size: 10 },
+          automargin: true,
+          type: "category",
+          categoryorder: "array",
+          categoryarray: xLabels,
+          layer: "below traces"
+        },
+        yaxis: {
+          title: "Diabetes (%)",
+          rangemode: "tozero",
+          layer: "below traces"
+        },
+        bargap: 0.2,
+        hovermode: false,
+        showlegend: false,
+        paper_bgcolor: "white",
+        plot_bgcolor: "white",
 
-    // 🔽 ejes/grilla por debajo de los traces
-    layer: "below traces"
-  },
-  yaxis: {
-    title: "Diabetes (%)",
-    rangemode: "tozero",
-    layer: "below traces"
-  },
-  bargap: 0.2,
-  hovermode: false,
-  showlegend: false,
-  paper_bgcolor: "white",
-  plot_bgcolor: "white",
+        shapes: [{
+          type: "line",
+          xref: "paper",
+          yref: "y",
+          x0: 0,
+          x1: 1,
+          y0: yMin,
+          y1: yMax,
+          line: { color: "blue", width: 2 },
+          layer: "above"
+        }],
 
-  // 🔽 Regresión detrás de las barras, pero al quedar los ejes "below traces",
-  // la línea no será tapada por la grilla.
-  shapes: [{
-    type: "line",
-    xref: "paper",
-    yref: "y",
-    x0: 0,
-    x1: 1,
-    y0: yMin,
-    y1: yMax,
-    line: { color: "red", width: 2 },
-    layer: "below" // detrás de las barras (y resto de traces)
-  }]
-};
+        annotations: [
+          {
+            x: 0.5,
+            y: (yMin + yMax) / 2,
+            xref: "paper",
+            yref: "y",
+            text: "📈 Tendencia generaral → Más obesidad, más diabetes",
+            showarrow: true,
+            arrowhead: 2,
+            ax: -40,
+            ay: -150,
+            font: { size: 12, color: "blue" },
+            align: "center",
+            bgcolor: "#fff",
+            opacity: 0.9
+          }
+        ]
+      };
 
-const config = { staticPlot: true, responsive: true, displaylogo: false };
+      const config = { staticPlot: true, responsive: true, displaylogo: false };
 
-Plotly.newPlot("chart", [traceBars], layout, config);
-
-
+      Plotly.newPlot("chart", [traceBars], layout, config);
+    })
+    .catch(error => console.error("Error al cargar JSON:", error));
 })();
 </script>
 </body>
