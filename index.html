@@ -36,15 +36,8 @@
 </head>
 <body>
 
-  <h1 style="margin:0 0 .5rem;">Obesidad (orden) vs. Diabetes (altura) por país</h1>
+  <h1 style="margin:0 0 .5rem;">Obesidad (color) vs. Diabetes (altura) por país</h1>
   <div id="chart"></div>
-  <div style="max-width: 800px; margin: 1rem auto; text-align: left; font-size: 0.9rem; color: #333;">
-    <p><strong>Notas:</strong></p>
-    <ul>
-      <li>⭐ Algunos países como Malasia presentan <em>más diabetes de lo esperado</em> en relación a su obesidad.</li>
-      <li>⚡ Otros como Aruba se salen de la norma, <em>menos diabetes de la esperada</em> en relación a su obesidad.</li>
-    </ul>
-  </div>
 
 <script>
 (function () {
@@ -177,10 +170,46 @@
             align: "center",
             bgcolor: "#fff",
             opacity: 1
-          }
-        ]
+          },
+          {
+            x: xLabels[51],
+            y: yValues[51],
+            text: "★",
+            showarrow: false,
+            font: {
+              size: 24,
+              color: "blue"
+            },
+            xanchor: "center",
+            yanchor: "bottom"
+          },
+          {
+            x: xLabels[33],
+            y: yValues[33],
+            text: "★",
+            showarrow: false,
+            font: {
+              size: 24,
+              color: "green"
+            },
+            xanchor: "center",
+            yanchor: "bottom"
+          },
+          {
+            x: 0.2,
+            y: 0.8,
+            xref: "paper",
+            yref: "paper", 
+            text: "Países fuera de la norma:<br><span style='color:blue'>  ★ </span>En Aruba la gente es muy obesa ↑ pero no hay mucha diabetes ↓.<br><span style='color:green'>★ </span>En Malasia no hay tanta obesidad ↓ pero hay mucha diabetes ↑.",
+            showarrow: false,
+            font: {
+              size: 12,
+            },
+            xanchor: "center",
+            yanchor: "bottom"
+          },
+        ],
       };
-
       const config = { staticPlot: true, responsive: true, displaylogo: false };
 
       Plotly.newPlot("chart", [traceBars], layout, config);
