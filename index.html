@@ -41,9 +41,8 @@
   <div style="max-width: 800px; margin: 1rem auto; text-align: left; font-size: 0.9rem; color: #333;">
     <p><strong>Notas:</strong></p>
     <ul>
-      <li>⬅️ Al inicio (izquierda) están los países con <strong>menor obesidad y diabetes</strong>.</li>
-      <li>➡️ Al final (derecha) están los países con <strong>mayor obesidad y diabetes</strong>.</li>
       <li>⭐ Algunos países como Malasia presentan <em>más diabetes de lo esperado</em> en relación a su obesidad.</li>
+      <li>⚡ Otros como Aruba se salen de la norma, <em>menos diabetes de la esperada</em> en relación a su obesidad.</li>
     </ul>
   </div>
 
@@ -85,35 +84,19 @@
       const yMin = a + b * minX;
       const yMax = a + b * maxX;
 
-      // const BuPu = [
-      //   "#f7f7f7",
-      //   "#ece2f0",
-      //   "#d0b7da",
-      //   "#c994c7",
-      //   "#df65b0",
-      //   "#e7298a",
-      //   "#ce1256"
-      // ];
-
-      // const colors = xValues.map(v => {
-      //     const norm = (v - minX) / (maxX - minX);
-      //     const idx = Math.floor(norm * (BuPu.length - 1)); // índice del color
-      //     return BuPu[idx];
-      //   });
-
       const traceBars = {
         type: "bar",
         x: xLabels,
         y: yValues,
         marker: {
           color: xValues,
-          colorscale: "Turbo",
+          colorscale: "Reds",
           colorbar: {
             title: "Obesidad (%)",
-            titleside: "bottom",
+            titleside: "top",
             orientation: "h",
             x: 0.5,
-            y: -0.15,
+            y: -0.3,
             xanchor: "center",
             yanchor: "top"
           },
@@ -159,19 +142,41 @@
 
         annotations: [
           {
-            x: 0.5,
-            y: (yMin + yMax) / 2,
+            x: 0.535,
+            y: (yMin + yMax) / 2 + 1,
             xref: "paper",
             yref: "y",
-            text: "📈 Tendencia generaral → Más obesidad, más diabetes",
-            showarrow: true,
-            arrowhead: 2,
-            ax: -40,
-            ay: -150,
+            text: "Tendencia general → Más obesidad, más diabetes",
+            textangle: -10.5,
+            showarrow: false,
             font: { size: 12, color: "blue" },
             align: "center",
             bgcolor: "#fff",
             opacity: 0.9
+          },
+          {
+            x: 0.02,
+            y: (yMin + yMax) / 2 + 1,
+            xref: "paper",
+            yref: "y",
+            text: "Países con <b>menor</b> obesidad y diabetes",
+            showarrow: false,
+            font: { size: 12, color: "gray" },
+            align: "center",
+            bgcolor: "#fff",
+            opacity: 1
+          },
+          {
+            x: 0.87,
+            y: 23,
+            xref: "paper",
+            yref: "y",
+            text: "Países con <b>mayor</b> obesidad y diabetes",
+            showarrow: false,
+            font: { size: 12, color: "red" },
+            align: "center",
+            bgcolor: "#fff",
+            opacity: 1
           }
         ]
       };
