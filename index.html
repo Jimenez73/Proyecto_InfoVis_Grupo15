@@ -7,21 +7,54 @@
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
   <script src="https://unpkg.com/tone@14.8.49/build/Tone.js"></script>
   <style>
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
-      margin: 0;
-      padding: 0.5rem;
-      background: white;
-      color: #111;
-      text-align: center;
+    :root{
+      --border:#e5e7eb; --txt:#111; --bg:#fff; --muted:#6b7280; --danger:#ef4444; --danger-bg:#fee2e2;
     }
-    h1 { margin: 0; font-size: 2rem; font-weight: 600; }
-    #chart { width: 90%; height: 85vh; margin: 0 auto; }
-    .controls { margin:.5rem 0 0; }
-    button { padding:.5rem .75rem; border:1px solid #e5e7eb; border-radius:.5rem; background:#fff; cursor:pointer; }
+    *{box-sizing:border-box}
+    body{
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+      margin:0; padding:.5rem; background:var(--bg); color:var(--txt); text-align:center;
+    }
+    h1{ margin:0; font-size:2rem; font-weight:600; }
+    #chart{ width:90%; height:85vh; margin:0 auto; }
+
+    /* Toolbar */
+    .toolbar{
+      position:fixed; top:12px; left:12px; z-index:20;
+      display:flex; gap:10px; align-items:center;
+      padding:4px;
+      backdrop-filter:saturate(1.2) blur(6px);
+    }
+    .btn{
+      width:40px; height:40px;
+      display:inline-grid; place-items:center;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:#fff; color:#111; cursor:pointer;
+      box-shadow:0 1px 2px rgb(0 0 0 / 6%);
+      transition:transform .06s ease, background .2s ease, color .2s ease, border-color .2s ease;
+      font-size:18px; line-height:1;
+    }
+    .btn:hover{ transform:translateY(-1px); }
+    .btn:active{ transform:translateY(0); }
+    .btn.is-playing{
+      background:var(--danger-bg); color:var(--danger); border-color:var(--danger);
+    }
+    .sr-only{
+      position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Controles -->
+  <div class="toolbar" aria-label="Controles de reproducción y audio">
+    <button id="playBtn" class="btn" aria-pressed="false" aria-label="Reproducir">
+      ▶
+      <span class="sr-only">Play / Stop</span>
+    </button>
+    <button id="audioBtn" class="btn" aria-label="Silenciar / Activar sonido">🔇</button>
+  </div>
 
   <h1 style="margin:0 0 .25rem;">Obesidad (color) vs. Diabetes (altura) por país</h1>
   <div id="chart"></div>
@@ -31,7 +64,7 @@
   const res = await fetch("datos/datos.json");
   const data = await res.json();
 
-  const rows = data
+  const rows = (data||[])
     .map(d => ({
       country: String(d.Country ?? "").trim(),
       obesity: Number(d.All_adults_Obesity),
@@ -39,7 +72,7 @@
     }))
     .filter(d => d.country && Number.isFinite(d.obesity) && Number.isFinite(d.diabetes));
 
-  if (rows.length === 0) return;
+  if (!rows.length) return;
 
   rows.sort((a, b) => a.obesity - b.obesity);
 
@@ -64,16 +97,17 @@
   const minYVal = Math.min(...yValues);
   const maxYVal = Math.max(...yValues);
 
-  // Barra con escala de alto contraste
+  // Barras
+  const baseOpacity = Array(yValues.length).fill(0.9);
   const traceBars = {
     type: "bar",
     x: xLabels,
     y: yValues,
     marker: {
-      color: xValues,               // colorea por obesidad
-      colorscale: "Portland",          // alto contraste y perceptualmente uniforme
-      cmin: minX,
-      cmax: maxX,
+      color: xValues,
+      colorscale: "Portland",
+      cmin: minX, cmax: maxX,
+      opacity: baseOpacity.slice(),
       colorbar: {
         title: "Obesidad (%)",
         titleside: "top",
@@ -83,128 +117,179 @@
       line: { width: 0.4, color: "#2b2b2b" }
     },
     hovertemplate:
-      "<b>%{x}</b><br>" +
-      "Diabetes: %{y:.2f}%<br>" +
-      "Obesidad: %{marker.color:.2f}%<extra></extra>"
+      "<b>%{x}</b><br>Diabetes: %{y:.2f}%<br>Obesidad: %{marker.color:.2f}%<extra></extra>"
   };
+  const refs = [
+  { label: "10 %", country: "Philippines" },
+  { label: "20 %", country: "Liberia" },
+  { label: "30 %", country: "Libya" },
+  { label: "40 %", country: "Mexico" },
+];
+
+const vlines = refs
+  .map(r => ({ ...r, idx: xLabels.indexOf(r.country) }))
+  .filter(r => r.idx >= 0)
+  .map(r => ({ ...r, x: r.idx + 0.5 })); // borde derecho de la barra
 
   const layout = {
     margin: { t: 20, r: 30, b: 180, l: 60 },
     xaxis: {
       title: "País (ordenado por Obesidad, de menor a mayor)",
-      tickangle: -60,
-      tickfont: { size: 10 },
-      automargin: true,
-      type: "category",
-      categoryorder: "array",
-      categoryarray: xLabels,
-      layer: "below traces"
+      tickangle: -60, tickfont: { size: 10 }, automargin: true,
+      type: "category", categoryorder: "array", categoryarray: xLabels,
+      layer: "below traces", showspikes: false
     },
-    yaxis: {
-      title: "Diabetes (%)",
-      rangemode: "tozero",
-      layer: "below traces"
-    },
+    yaxis: { title: "Diabetes (%)", rangemode: "tozero", layer: "below traces", showspikes: false },
     bargap: 0.2,
     hovermode: "closest",
+    dragmode: false,                 // cursor normal
     showlegend: false,
-    paper_bgcolor: "white",
-    plot_bgcolor: "white",
+    paper_bgcolor: "white", plot_bgcolor: "white",
     hoverlabel: { bgcolor: "white", bordercolor: "#999", font: { color: "#111" } },
+shapes: [
+  {
+    type: "line", xref: "paper", yref: "y",
+    x0: 0, x1: 1, y0: yMinTrend, y1: yMaxTrend,
+    line: { color: "blue", width: 2 }, layer: "above"
+  },
+  ...vlines.map(r => ({
+    type: "line",
+    xref: "x",
+    yref: "paper",
+    x0: r.x, x1: r.x,
+    y0: 0, y1: 1,
+    line: { color: "#9ca3af", width: 1.5, dash: "dot" },
+    layer: "above"
+  }))
+]
+,
+annotations: [
+    {
+    x: 0.535,
+    y: (yMinTrend + yMaxTrend) / 2 + 1,
+    xref: "paper",
+    yref: "y",
+    text: "Tendencia general → Más obesidad, más diabetes",
+    textangle: -8,
+    showarrow: false,
+    font: { size: 12, color: "blue" },
+    align: "center",
+    bgcolor: "#ffffff00",
+    opacity: 1
+  },
+...vlines.map(r => ({
+  xref: "x", yref: "paper",
+  x: r.x, y: 1.02,
+  text: r.label,
+  showarrow: false,
+  font: { size: 11, color: "#6b7280" },
+  xanchor: "center", yanchor: "bottom"
+}))
 
-    shapes: [{
-      type: "line",
-      xref: "paper",
-      yref: "y",
-      x0: 0, x1: 1,
-      y0: yMinTrend, y1: yMaxTrend,
-      line: { color: "blue", width: 2 },
-      layer: "above"
-    }],
+]
 
-    annotations: [
-      {
-        x: 0.535,
-        y: (yMinTrend + yMaxTrend) / 2 + 1,
-        xref: "paper", yref: "y",
-        text: "Tendencia general → Más obesidad, más diabetes",
-        textangle: -10.5, showarrow: false,
-        font: { size: 12, color: "blue" },
-        align: "center", bgcolor: "#fff", opacity: 0.9
-      },
-      {
-        x: 0.02, y: (yMinTrend + yMaxTrend) / 2 + 1,
-        xref: "paper", yref: "y",
-        text: "Países con <b>menor</b> obesidad y diabetes",
-        showarrow: false, font: { size: 12, color: "gray" },
-        align: "center", bgcolor: "#fff", opacity: 1
-      },
-      {
-        x: 0.87, y: 23,
-        xref: "paper", yref: "y",
-        text: "Países con <b>mayor</b> obesidad y diabetes",
-        showarrow: false, font: { size: 12, color: "red" },
-        align: "center", bgcolor: "#fff", opacity: 1
-      },
-      // Mantengo tus estrellas si existen esos índices
-      ...(xLabels[51] ? [{
-        x: xLabels[51], y: yValues[51],
-        text: "★", showarrow: false,
-        font: { size: 24, color: "blue" },
-        xanchor: "center", yanchor: "bottom"
-      }] : []),
-      ...(xLabels[33] ? [{
-        x: xLabels[33], y: yValues[33],
-        text: "★", showarrow: false,
-        font: { size: 24, color: "green" },
-        xanchor: "center", yanchor: "bottom"
-      }] : []),
-      {
-        x: 0.2, y: 0.8, xref: "paper", yref: "paper",
-        text: "Países fuera de la norma:<br><span style='color:blue'>  ★ </span>En Aruba la gente es muy obesa ↑ pero no hay mucha diabetes ↓.<br><span style='color:green'>★ </span>En Malasia no hay tanta obesidad ↓ pero hay mucha diabetes ↑.",
-        showarrow: false, font: { size: 12 }, xanchor: "center", yanchor: "bottom"
-      },
-    ],
-  };
+
+};
 
   const config = { staticPlot: false, responsive: true, displaylogo: false, displayModeBar: false };
 
-  await Plotly.newPlot("chart", [traceBars], layout, config);
+  const chartDiv = document.getElementById("chart");
+  await Plotly.newPlot(chartDiv, [traceBars], layout, config);
 
-  // --- Audio con Tone.js en hover ---
+  // ---- Audio ----
   const synth = new Tone.Synth({
     oscillator: { type: "triangle" },
     envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.3 }
   }).toDestination();
 
-  let audioReady = false;
-  async function enableAudio() {
-    if (!audioReady) {
-      await Tone.start();
-      audioReady = true;
-    }
-  }
-
-  window.addEventListener("click", enableAudio, { once: true });
-  window.addEventListener("mousemove", enableAudio, { once: true });
-
-  // Mapeo lineal de diabetes -> nota MIDI (C3=48 a C6=84)
   function diabetesToMidi(v) {
-    const midiMin = 48, midiMax = 84;
+    const midiMin = 48, midiMax = 84; // C3..C6
     const t = (v - minYVal) / Math.max(1e-9, (maxYVal - minYVal));
     return Math.round(midiMin + t * (midiMax - midiMin));
   }
 
-  const chartDiv = document.getElementById("chart");
-  chartDiv.on("plotly_hover", ev => {
-    if (!audioReady) return;
-    if (!ev || !ev.points || !ev.points.length) return;
-    const diabetes = ev.points[0].y;
-    const midi = diabetesToMidi(diabetes);
-    const note = Tone.Frequency(midi, "midi").toNote();
-    synth.triggerAttackRelease(note, "8n");
+  function setHighlight(idx) {
+    const op = baseOpacity.slice();
+    if (idx >= 0 && idx < op.length) {
+      for (let i = 0; i < op.length; i++) op[i] = 0.25;
+      op[idx] = 1.0;
+    }
+    Plotly.restyle(chartDiv, { "marker.opacity": [op] }, [0]);
+  }
+
+  // ---- Secuencia ----
+  const playBtn = document.getElementById("playBtn");
+  const audioBtn = document.getElementById("audioBtn");
+  let playing = false, schedId = null, index = 0, audioEnabled = false;
+
+  async function ensureAudioOn() {
+    if (!audioEnabled) {
+      await Tone.start();
+      Tone.Destination.mute = false;
+      audioEnabled = true;
+      audioBtn.textContent = "🔊";
+    }
+  }
+
+  async function startSequence() {
+    if (playing) return;
+    await ensureAudioOn();          // PLAY habilita sonido automáticamente
+    playing = true;
+    index = 0;
+    playBtn.classList.add("is-playing");
+    playBtn.setAttribute("aria-pressed", "true");
+    playBtn.textContent = "■";      // cuadrado rojo
+    Tone.Transport.bpm.value = 120;
+    schedId = Tone.Transport.scheduleRepeat(time => {
+      const i = index % yValues.length;
+      const diabetes = yValues[i];
+      const midi = diabetesToMidi(diabetes);
+      const note = Tone.Frequency(midi, "midi").toNote();
+      setHighlight(i);
+      synth.triggerAttackRelease(note, "8n", time);
+      index++;
+      if (index >= yValues.length) stopSequence(); // una pasada
+    }, "8n");
+    Tone.Transport.start();
+  }
+
+  function stopSequence() {
+    if (!playing) return;
+    playing = false;
+    if (schedId != null) { Tone.Transport.clear(schedId); schedId = null; }
+    Tone.Transport.stop();
+    Tone.Transport.position = 0;
+    setHighlight(-1);
+    playBtn.classList.remove("is-playing");
+    playBtn.setAttribute("aria-pressed", "false");
+    playBtn.textContent = "▶";
+  }
+
+  playBtn.addEventListener("click", () => {
+    if (!playing) startSequence(); else stopSequence(); // clic en ■ resetea todo
   });
 
+  // Mute / Unmute
+  audioBtn.addEventListener("click", async () => {
+    if (!audioEnabled) {
+      await ensureAudioOn();
+    } else {
+      Tone.Destination.mute = !Tone.Destination.mute;
+      audioBtn.textContent = Tone.Destination.mute ? "🔇" : "🔊";
+    }
+  });
+
+  // Hover opcional cuando no está reproduciendo
+  chartDiv.on("plotly_hover", ev => {
+    if (!playing && audioEnabled && !Tone.Destination.mute) {
+      const v = ev?.points?.[0]?.y;
+      if (Number.isFinite(v)) {
+        const midi = diabetesToMidi(v);
+        const note = Tone.Frequency(midi, "midi").toNote();
+        synth.triggerAttackRelease(note, "8n");
+      }
+    }
+  });
 })();
 </script>
 </body>
