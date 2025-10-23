@@ -7,56 +7,27 @@
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
   <script src="https://unpkg.com/tone@14.8.49/build/Tone.js"></script>
   <style>
-    :root{
-      --border:#e5e7eb; --txt:#111; --bg:#fff; --muted:#6b7280; --danger:#ef4444; --danger-bg:#fee2e2;
-    }
+    :root{--border:#e5e7eb;--txt:#111;--bg:#fff;--danger:#ef4444;--danger-bg:#fee2e2}
     *{box-sizing:border-box}
-    body{
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
-      margin:0; padding:.5rem; background:var(--bg); color:var(--txt); text-align:center;
-    }
-    h1{ margin:0; font-size:2rem; font-weight:600; }
-    #chart{ width:90%; height:85vh; margin:0 auto; }
-
-    /* Toolbar */
-    .toolbar{
-      position:fixed; top:12px; left:12px; z-index:20;
-      display:flex; gap:10px; align-items:center;
-      padding:4px;
-      backdrop-filter:saturate(1.2) blur(6px);
-    }
-    .btn{
-      width:40px; height:40px;
-      display:inline-grid; place-items:center;
-      border:1px solid var(--border);
-      border-radius:10px;
-      background:#fff; color:#111; cursor:pointer;
-      box-shadow:0 1px 2px rgb(0 0 0 / 6%);
-      transition:transform .06s ease, background .2s ease, color .2s ease, border-color .2s ease;
-      font-size:18px; line-height:1;
-    }
-    .btn:hover{ transform:translateY(-1px); }
-    .btn:active{ transform:translateY(0); }
-    .btn.is-playing{
-      background:var(--danger-bg); color:var(--danger); border-color:var(--danger);
-    }
-    .sr-only{
-      position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
-    }
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,sans-serif;margin:0;padding:.5rem;background:var(--bg);color:var(--txt);text-align:center}
+    h1{margin:0;font-size:2rem;font-weight:600}
+    #chart{width:90%;height:85vh;margin:0 auto}
+    .toolbar{position:fixed;top:12px;left:12px;z-index:20;display:flex;gap:10px;align-items:center;padding:4px}
+    .btn{width:40px;height:40px;display:inline-grid;place-items:center;border:1px solid var(--border);border-radius:10px;background:#fff;color:#111;cursor:pointer;box-shadow:0 1px 2px rgb(0 0 0 / 6%);transition:transform .06s ease}
+    .btn:hover{transform:translateY(-1px)}
+    .btn.is-playing{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
+    .hint{font-size:.9rem;color:#555;margin:.5rem 0}
   </style>
 </head>
 <body>
 
-  <!-- Controles -->
-  <div class="toolbar" aria-label="Controles de reproducción y audio">
-    <button id="playBtn" class="btn" aria-pressed="false" aria-label="Reproducir">
-      ▶
-      <span class="sr-only">Play / Stop</span>
-    </button>
-    <button id="audioBtn" class="btn" aria-label="Silenciar / Activar sonido">🔇</button>
+  <div class="toolbar" aria-label="Controles">
+    <button id="playBtn" class="btn" aria-pressed="false" aria-label="Reproducir">▶</button>
+    <button id="audioBtn" class="btn" aria-label="Activar audio">🔇</button>
   </div>
 
-  <h1 style="margin:0 0 1rem;">Obesidad (color) vs. Diabetes (altura) por país</h1>
+  <h1>Obesidad (color) vs. Diabetes (altura) por país</h1>
+  <div class="hint" id="hint">Haz clic una vez para activar el audio. Luego pasa el mouse por una barra.</div>
   <div id="chart"></div>
 
 <script>
@@ -65,300 +36,171 @@
   const data = await res.json();
 
   const rows = (data||[])
-    .map(d => ({
-      country: String(d.Country ?? "").trim(),
-      obesity: Number(d.All_adults_Obesity),
-      diabetes: Number(d.All_adults_Diabetes)
-    }))
+    .map(d => ({ country: String(d.Country ?? "").trim(), obesity: Number(d.All_adults_Obesity), diabetes: Number(d.All_adults_Diabetes) }))
     .filter(d => d.country && Number.isFinite(d.obesity) && Number.isFinite(d.diabetes));
-
   if (!rows.length) return;
 
-  rows.sort((a, b) => a.obesity - b.obesity);
+  rows.sort((a,b)=>a.obesity-b.obesity);
+  const xLabels = rows.map(r=>r.country);
+  const yValues = rows.map(r=>r.diabetes);
+  const xValues = rows.map(r=>r.obesity);
 
-  const xLabels = rows.map(r => r.country);
-  const yValues = rows.map(r => r.diabetes);
-  const xValues = rows.map(r => r.obesity);
-
-  // Regresión simple
+  // regresión
   const n = xValues.length;
-  const meanX = xValues.reduce((s, v) => s + v, 0) / n;
-  const meanY = yValues.reduce((s, v) => s + v, 0) / n;
-  let num = 0, den = 0;
-  for (let i = 0; i < n; i++) { num += (xValues[i] - meanX) * (yValues[i] - meanY); den += (xValues[i] - meanX) ** 2; }
-  const b = num / den;
-  const a = meanY - b * meanX;
+  const meanX = xValues.reduce((s,v)=>s+v,0)/n;
+  const meanY = yValues.reduce((s,v)=>s+v,0)/n;
+  let num=0, den=0; for (let i=0;i<n;i++){ num+=(xValues[i]-meanX)*(yValues[i]-meanY); den+=(xValues[i]-meanX)**2; }
+  const b = num/den; const a = meanY - b*meanX;
 
-  const minX = Math.min(...xValues);
-  const maxX = Math.max(...xValues);
-  const yMinTrend = a + b * minX;
-  const yMaxTrend = a + b * maxX;
+  const minX = Math.min(...xValues), maxX = Math.max(...xValues);
+  const minYVal = Math.min(...yValues), maxYVal = Math.max(...yValues);
+  const yMinTrend = a + b*minX, yMaxTrend = a + b*maxX;
 
-  const minYVal = Math.min(...yValues);
-  const maxYVal = Math.max(...yValues);
-
-  // Barras
   const baseOpacity = Array(yValues.length).fill(0.9);
   const traceBars = {
-    type: "bar",
-    x: xLabels,
-    y: yValues,
-    marker: {
-      color: xValues,
-      colorscale: "Portland",
-      cmin: minX, cmax: maxX,
-      opacity: baseOpacity.slice(),
-      colorbar: {
-        title: "Obesidad (%)",
-        titleside: "top",
-        orientation: "h",
-        x: 0.5, y: -0.3, xanchor: "center", yanchor: "top"
-      },
-      line: { width: 0.4, color: "#2b2b2b" }
-    },
-    hovertemplate:
-      "<b>%{x}</b><br>Diabetes: %{y:.2f}%<br>Obesidad: %{marker.color:.2f}%<extra></extra>"
+    type:"bar", x:xLabels, y:yValues,
+    marker:{ color:xValues, colorscale:"Portland", cmin:minX, cmax:maxX, opacity:baseOpacity.slice(),
+      colorbar:{ title:"Obesidad (%)", titleside:"top", orientation:"h", x:0.5, y:-0.3, xanchor:"center", yanchor:"top" },
+      line:{ width:0.4, color:"#2b2b2b" } },
+    hovertemplate:"<b>%{x}</b><br>Diabetes: %{y:.2f}%<br>Obesidad: %{marker.color:.2f}%<extra></extra>"
   };
-  const refs = [
-  { label: "10 %", country: "Philippines" },
-  { label: "20 %", country: "Liberia" },
-  { label: "30 %", country: "Libya" },
-  { label: "40 %", country: "Mexico" },
-];
-
-const vlines = refs
-  .map(r => ({ ...r, idx: xLabels.indexOf(r.country) }))
-  .filter(r => r.idx >= 0)
-  .map(r => ({ ...r, x: r.idx + 0.5 })); // borde derecho de la barra
 
   const layout = {
-    margin: { t: 20, r: 30, b: 180, l: 60 },
-    xaxis: {
-      title: "País (ordenado por Obesidad, de menor a mayor)",
-      tickangle: -60, tickfont: { size: 10 }, automargin: true,
-      type: "category", categoryorder: "array", categoryarray: xLabels,
-      layer: "below traces", showspikes: false
-    },
-    yaxis: { title: "Diabetes (%)", rangemode: "tozero", layer: "below traces", showspikes: false },
-    bargap: 0.2,
-    hovermode: "closest",
-    dragmode: false,                 // cursor normal
-    showlegend: false,
-    paper_bgcolor: "white", plot_bgcolor: "white",
-    hoverlabel: { bgcolor: "white", bordercolor: "#999", font: { color: "#111" } },
-shapes: [
-  {
-    type: "line", xref: "paper", yref: "y",
-    x0: 0, x1: 1, y0: yMinTrend, y1: yMaxTrend,
-    line: { color: "blue", width: 2 }, layer: "above"
-  },
-  ...vlines.map(r => ({
-    type: "line",
-    xref: "x",
-    yref: "paper",
-    x0: r.x, x1: r.x,
-    y0: 0, y1: 1,
-    line: { color: "#9ca3af", width: 1.5, dash: "dot" },
-    layer: "above"
-  }))
-]
-,
-annotations: [
-  // Texto sobre la línea de tendencia
-  {
-    x: 0.535,
-    y: (yMinTrend + yMaxTrend) / 2 + 1,
-    xref: "paper",
-    yref: "y",
-    text: "Tendencia general → Más obesidad, más diabetes",
-    textangle: -8,
-    showarrow: false,
-    font: { size: 12, color: "blue" },
-    align: "center",
-    bgcolor: "#ffffff00",
-    opacity: 1
-  },
+    margin:{t:20,r:30,b:180,l:60},
+    xaxis:{ title:"País (ordenado por Obesidad)", tickangle:-60, tickfont:{size:10}, type:"category", categoryorder:"array", categoryarray:xLabels },
+    yaxis:{ title:"Diabetes (%)", rangemode:"tozero" },
+    bargap:0.2, hovermode:"closest", showlegend:false, paper_bgcolor:"white", plot_bgcolor:"white",
+    shapes:[{ type:"line", xref:"paper", yref:"y", x0:0, x1:1, y0:yMinTrend, y1:yMaxTrend, line:{color:"blue", width:2} }]
+  };
 
-  // Caja izquierda "menor obesidad y diabetes"
-  {
-    x: 0.02,
-    y: (yMinTrend + yMaxTrend) / 2 + 1,
-    xref: "paper",
-    yref: "y",
-    text: "Países con <b>menor</b> obesidad y diabetes",
-    showarrow: false,
-    font: { size: 12, color: "gray" },
-    align: "center",
-    bgcolor: "#fff",
-    opacity: 1
-  },
-
-  // Caja derecha "mayor obesidad y diabetes"
-  {
-    x: 0.87,
-    y: 23,
-    xref: "paper",
-    yref: "y",
-    text: "Países con <b>mayor</b> obesidad y diabetes",
-    showarrow: false,
-    font: { size: 12, color: "red" },
-    align: "center",
-    bgcolor: "#fff",
-    opacity: 1
-  },
-
-  // Estrellas especiales (solo si existen esos índices)
-  ...(xLabels[51] ? [{
-    x: xLabels[51],
-    y: yValues[51],
-    text: "★",
-    showarrow: false,
-    font: { size: 24, color: "blue" },
-    xanchor: "center",
-    yanchor: "bottom"
-  }] : []),
-  ...(xLabels[33] ? [{
-    x: xLabels[33],
-    y: yValues[33],
-    text: "★",
-    showarrow: false,
-    font: { size: 24, color: "green" },
-    xanchor: "center",
-    yanchor: "bottom"
-  }] : []),
-
-  // Texto descriptivo de outliers (Aruba/Malasia)
-  {
-    x: 0.2,
-    y: 0.8,
-    xref: "paper",
-    yref: "paper",
-    text: "Países fuera de la norma:<br><span style='color:blue'>★</span> Aruba: mucha obesidad ↑ y poca diabetes ↓.<br><span style='color:green'>★</span> Malasia: menor obesidad ↓ y mucha diabetes ↑.",
-    showarrow: false,
-    font: { size: 12 },
-    xanchor: "center",
-    yanchor: "bottom",
-    bgcolor: "#fff",
-    opacity: 1
-  },
-
-  // Etiquetas de líneas verticales (vlines)
-  ...vlines.map(r => ({
-    xref: "x",
-    yref: "paper",
-    x: r.x,
-    y: 1,
-    text: r.label,
-    showarrow: false,
-    font: { size: 11, color: "#6b7280" },
-    xanchor: "center",
-    yanchor: "bottom"
-  }))
-]
-
-
-
-};
-
-  const config = { staticPlot: false, responsive: true, displaylogo: false, displayModeBar: false };
-
+  const config = { responsive:true, displaylogo:false, displayModeBar:false };
   const chartDiv = document.getElementById("chart");
-  await Plotly.newPlot(chartDiv, [traceBars], layout, config);
+  await Plotly.newPlot(chartDiv,[traceBars],layout,config);
 
-  // ---- Audio ----
-  const synth = new Tone.Synth({
-    oscillator: { type: "triangle" },
-    envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.3 }
-  }).toDestination();
-
-  function diabetesToMidi(v) {
-    const midiMin = 48, midiMax = 84; // C3..C6
-    const t = (v - minYVal) / Math.max(1e-9, (maxYVal - minYVal));
-    return Math.round(midiMin + t * (midiMax - midiMin));
-  }
-
-  function setHighlight(idx) {
-    const op = baseOpacity.slice();
-    if (idx >= 0 && idx < op.length) {
-      for (let i = 0; i < op.length; i++) op[i] = 0.25;
-      op[idx] = 1.0;
-    }
-    Plotly.restyle(chartDiv, { "marker.opacity": [op] }, [0]);
-  }
-
-  // ---- Secuencia ----
+  // ---- AUDIO ----
+  const hint = document.getElementById("hint");
   const playBtn = document.getElementById("playBtn");
   const audioBtn = document.getElementById("audioBtn");
-  let playing = false, schedId = null, index = 0, audioEnabled = false;
 
-  async function ensureAudioOn() {
-    if (!audioEnabled) {
-      await Tone.start();
-      Tone.Destination.mute = false;
-      audioEnabled = true;
-      audioBtn.textContent = "🔊";
+  const bass = new Tone.Player({ url:"/audio/Bass.wav", fadeOut:0.05, loop:false, autostart:false }).toDestination();
+  const maraca = new Tone.Player({ url:"/audio/Maraca.wav", fadeOut:0.05, loop:false, autostart:false }).toDestination();
+  await Tone.loaded();
+
+  function toPlaybackRate(v, vmin, vmax, semiMin=0, semiMax=12){
+    const t = (v - vmin) / Math.max(1e-9, (vmax - vmin));
+    const s = semiMin + t*(semiMax - semiMin);
+    return Math.pow(2, s/12);
+  }
+
+  function setHighlight(idx){
+    const op = baseOpacity.slice();
+    if(idx>=0 && idx<op.length){ for(let i=0;i<op.length;i++) op[i]=0.25; op[idx]=1; }
+    Plotly.restyle(chartDiv,{ "marker.opacity":[op] },[0]);
+  }
+
+  let audioEnabled=false;
+  async function unlockAudio(){
+    if(audioEnabled) return;
+    await Tone.start();
+    Tone.Destination.mute=false;
+    audioEnabled=true;
+    audioBtn.textContent="🔊";
+    hint.textContent="Audio activado. Pasa el mouse por una barra para oír el sample completo.";
+  }
+
+  document.addEventListener("pointerdown", unlockAudio, { once:true });
+  audioBtn.addEventListener("click", unlockAudio);
+
+  // ---- Secuencia tipo hover sin Transport ----
+  let playing=false, timer=null, index=0;
+  const STEP=1.0; // segundos por barra
+
+  function tick(){
+    if(!playing) return;
+    const i=index;
+    const now = Tone.now();
+
+    // cortar cualquier resto antes de iniciar
+    try{ bass.stop(now); }catch{}
+    try{ maraca.stop(now); }catch{}
+
+    bass.playbackRate   = toPlaybackRate(xValues[i], minX, maxX, 0, 12);
+    maraca.playbackRate = toPlaybackRate(yValues[i], minYVal, maxYVal, 0, 12);
+
+    setHighlight(i);
+
+    // exactamente 1s por barra
+    bass.start(now, 0, STEP);
+    maraca.start(now, 0, STEP);
+
+    index++;
+    if(index >= yValues.length){
+      // detener justo después de esta barra
+      setTimeout(()=>{ stopSequence(); }, STEP*1000);
     }
   }
 
-  async function startSequence() {
-    if (playing) return;
-    await ensureAudioOn();          // PLAY habilita sonido automáticamente
-    playing = true;
-    index = 0;
+  async function startSequence(){
+    if(playing) return;
+    if(!audioEnabled) await unlockAudio();
+    playing=true; index=0;
+
     playBtn.classList.add("is-playing");
-    playBtn.setAttribute("aria-pressed", "true");
-    playBtn.textContent = "■";      // cuadrado rojo
-    Tone.Transport.bpm.value = 120;
-    schedId = Tone.Transport.scheduleRepeat(time => {
-      const i = index % yValues.length;
-      const diabetes = yValues[i];
-      const midi = diabetesToMidi(diabetes);
-      const note = Tone.Frequency(midi, "midi").toNote();
-      setHighlight(i);
-      synth.triggerAttackRelease(note, "8n", time);
-      index++;
-      if (index >= yValues.length) stopSequence(); // una pasada
-    }, "8n");
-    Tone.Transport.start();
+    playBtn.textContent="■";
+
+    tick(); // primera barra inmediato
+    timer = setInterval(()=>{ 
+      if(index < yValues.length) tick();
+    }, STEP*1000);
   }
 
-  function stopSequence() {
-    if (!playing) return;
-    playing = false;
-    if (schedId != null) { Tone.Transport.clear(schedId); schedId = null; }
-    Tone.Transport.stop();
-    Tone.Transport.position = 0;
+  function stopSequence(){
+    if(!playing) return;
+    playing=false;
+    if(timer){ clearInterval(timer); timer=null; }
+
+    // cortar cualquier resto y limpiar UI
+    const now = Tone.now();
+    try{ bass.stop(now); }catch{}
+    try{ maraca.stop(now); }catch{}
+
     setHighlight(-1);
     playBtn.classList.remove("is-playing");
-    playBtn.setAttribute("aria-pressed", "false");
-    playBtn.textContent = "▶";
+    playBtn.textContent="▶";
   }
 
-  playBtn.addEventListener("click", () => {
-    if (!playing) startSequence(); else stopSequence(); // clic en ■ resetea todo
+  playBtn.addEventListener("click",()=>{ if(!playing) startSequence(); else stopSequence(); });
+
+  // ---- Hover (entero) ----
+  let hoverIdx=null;
+
+  function stopHoverSound(){
+    const now = Tone.now();
+    try{ bass.stop(now); }catch{}
+    try{ maraca.stop(now); }catch{}
+    hoverIdx=null;
+  }
+
+  chartDiv.on("plotly_hover", ev=>{
+    if(!audioEnabled || playing || Tone.Destination.mute) return;
+    const p=ev?.points?.[0]; const idx=p?.pointIndex;
+    if(!Number.isInteger(idx)) return;
+    if(idx===hoverIdx && (bass.state==="started"||maraca.state==="started")) return;
+
+    stopHoverSound();
+    bass.playbackRate=toPlaybackRate(xValues[idx],minX,maxX,0,12);
+    maraca.playbackRate=toPlaybackRate(yValues[idx],minYVal,maxYVal,0,12);
+
+    const now=Tone.now();
+    bass.start(now,0); // hover: completo
+    maraca.start(now,0);
+
+    hoverIdx=idx;
   });
 
-  // Mute / Unmute
-  audioBtn.addEventListener("click", async () => {
-    if (!audioEnabled) {
-      await ensureAudioOn();
-    } else {
-      Tone.Destination.mute = !Tone.Destination.mute;
-      audioBtn.textContent = Tone.Destination.mute ? "🔇" : "🔊";
-    }
-  });
+  chartDiv.on("plotly_unhover", ()=>{ stopHoverSound(); });
+  chartDiv.addEventListener("mouseleave", ()=>{ stopHoverSound(); });
 
-  // Hover opcional cuando no está reproduciendo
-  chartDiv.on("plotly_hover", ev => {
-    if (!playing && audioEnabled && !Tone.Destination.mute) {
-      const v = ev?.points?.[0]?.y;
-      if (Number.isFinite(v)) {
-        const midi = diabetesToMidi(v);
-        const note = Tone.Frequency(midi, "midi").toNote();
-        synth.triggerAttackRelease(note, "8n");
-      }
-    }
-  });
 })();
 </script>
 </body>
