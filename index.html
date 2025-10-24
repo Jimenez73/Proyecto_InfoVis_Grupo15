@@ -59,7 +59,7 @@
   const baseOpacity = Array(yValues.length).fill(0.9);
   const traceBars = {
     type:"bar", x:xLabels, y:yValues,
-    marker:{ color:xValues, colorscale:"Portland", cmin:minX, cmax:maxX, opacity:baseOpacity.slice(),
+    marker:{ color:xValues, colorscale:"Cividis", reversescale: true, cmin:minX, cmax:maxX, opacity:baseOpacity.slice(),
       colorbar:{ title:"Obesidad (%)", titleside:"top", orientation:"h", x:0.5, y:-0.3, xanchor:"center", yanchor:"top" },
       line:{ width:0.4, color:"#2b2b2b" } },
     hovertemplate:"<b>%{x}</b><br>Diabetes: %{y:.2f}%<br>Obesidad: %{marker.color:.2f}%<extra></extra>"
@@ -79,15 +79,30 @@
 
   const layout = {
     margin: { t: 20, r: 30, b: 180, l: 60 },
-xaxis: {
+    xaxis: {
       title: "País (ordenado por Obesidad, de menor a mayor)",
       tickangle: -60, tickfont: { size: 10 }, automargin: true,
       type: "category", categoryorder: "array", categoryarray: xLabels,
-      layer: "below traces", showspikes: false
+      layer: "below traces", showspikes: false // Mantenemos esta en false
     },
-    yaxis: { title: "Diabetes (%)", rangemode: "tozero", layer: "below traces", showspikes: false },
+    // MODIFICADO: Se actualizó el 'yaxis' para mostrar la línea horizontal (spike)
+    yaxis: {
+      title: "Diabetes (%)",
+      rangemode: "tozero",
+      layer: "below traces",
+      showspikes: true,     // 1. Habilitar spikes en el eje Y
+      spikemode: 'across',  // 2. Hacer que la línea cruce todo el gráfico
+      spikedash: 'dash',    // 3. Estilo de la línea (punteada)
+      spikecolor: '#555',   // 4. Color de la línea
+      spikethickness: 1     // 5. Grosor
+    },
     bargap:0.2,
-    hovermode:"closest",
+    hovermode:"closest", // 'hovermode: closest' ya activa los spikes
+    hoverlabel: {
+      bgcolor: "#333333", // Un fondo oscuro (gris oscuro)
+      font: { color: "#ffffff" }, // Texto siempre blanco
+      bordercolor: "#666666"  // Un borde sutil
+    },
     showlegend:false,
     paper_bgcolor:"white",
     plot_bgcolor:"white",
@@ -145,7 +160,7 @@ xaxis: {
     yref: "y",
     text: "Países con <b>mayor</b> obesidad y diabetes",
     showarrow: false,
-    font: { size: 12, color: "red" },
+    font: { size: 12, color: "darkblue" },
     align: "center",
     bgcolor: "#fff",
     opacity: 1
@@ -177,7 +192,7 @@ xaxis: {
     y: 0.8,
     xref: "paper",
     yref: "paper",
-    text: "Países fuera de la norma:<br><span style='color:blue'>★</span> Aruba: mucha obesidad ↑ y poca diabetes ↓.<br><span style='color:green'>★</span> Malasia: menor obesidad ↓ y mucha diabetes ↑.",
+    text: "Países fuera de la norma:<br><span style='color:blue'>★</span> Aruba: mucha obesidad ↑ y poca diabetes ↓.<br><span style'color:green'>★</span> Malasia: menor obesidad ↓ y mucha diabetes ↑.",
     showarrow: false,
     font: { size: 12 },
     xanchor: "center",
@@ -255,7 +270,9 @@ xaxis: {
     try{ bass.stop(now); }catch{}
     try{ maraca.stop(now); }catch{}
 
-    bass.playbackRate   = toPlaybackRate(xValues[i], minX, maxX, 0, 12);
+    // MODIFICADO: Invertimos los semitonos (de 12 a 0) para el bajo (obesidad)
+    // Así, a mayor obesidad (valor 'x'), más grave (tono más bajo).
+    bass.playbackRate   = toPlaybackRate(xValues[i], minX, maxX, 12, 0);
     maraca.playbackRate = toPlaybackRate(yValues[i], minYVal, maxYVal, 0, 12);
 
     setHighlight(i);
@@ -319,7 +336,9 @@ xaxis: {
     if(idx===hoverIdx && (bass.state==="started"||maraca.state==="started")) return;
 
     stopHoverSound();
-    bass.playbackRate=toPlaybackRate(xValues[idx],minX,maxX,0,12);
+    
+    // MODIFICADO: Invertimos los semitonos (de 12 a 0) también para el hover del bajo
+    bass.playbackRate=toPlaybackRate(xValues[idx],minX,maxX, 12, 0);
     maraca.playbackRate=toPlaybackRate(yValues[idx],minYVal,maxYVal,0,12);
 
     const now=Tone.now();
