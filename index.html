@@ -65,6 +65,18 @@
     hovertemplate:"<b>%{x}</b><br>Diabetes: %{y:.2f}%<br>Obesidad: %{marker.color:.2f}%<extra></extra>"
   };
 
+    const refs = [
+  { label: "10 %", country: "Philippines" },
+  { label: "20 %", country: "Liberia" },
+  { label: "30 %", country: "Libya" },
+  { label: "40 %", country: "Mexico" },
+];
+
+  const vlines = refs
+  .map(r => ({ ...r, idx: xLabels.indexOf(r.country) }))
+  .filter(r => r.idx >= 0)
+  .map(r => ({ ...r, x: r.idx + 0.5 })); // borde derecho de la barra
+
   const layout = {
     margin: { t: 20, r: 30, b: 180, l: 60 },
 xaxis: {
