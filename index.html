@@ -12,8 +12,20 @@
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,sans-serif;margin:0;padding:.5rem;background:var(--bg);color:var(--txt);text-align:center}
     h1{margin:0;font-size:2rem;font-weight:600}
     #chart{width:90%;height:85vh;margin:0 auto}
-    .toolbar{position:fixed;top:12px;left:12px;z-index:20;display:flex;gap:10px;align-items:center;padding:4px}
-    .btn{width:40px;height:40px;display:inline-grid;place-items:center;border:1px solid var(--border);border-radius:10px;background:#fff;color:#111;cursor:pointer;box-shadow:0 1px 2px rgb(0 0 0 / 6%);transition:transform .06s ease}
+    .toolbar{
+      position:fixed; top:12px; left:12px;
+      z-index:10000;               /* ↑ antes 20 */
+      display:flex; gap:10px; align-items:center; padding:4px;
+      pointer-events:auto;
+    }
+    .btn{
+      width:40px; height:40px; display:inline-grid; place-items:center;
+      border:1px solid var(--border); border-radius:10px;
+      background:#fff; color:#111; cursor:pointer;
+      box-shadow:0 1px 2px rgb(0 0 0 / 6%); transition:transform .06s ease;
+      position:relative; z-index:10001; /* asegura clic por encima de overlays */
+    }
+
     .btn:hover{transform:translateY(-1px)}
     .btn.is-playing{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
     .hint{font-size:.9rem;color:#555;margin:.5rem 0}
@@ -27,7 +39,7 @@
   </div>
 
   <h1>Obesidad (color) vs. Diabetes (altura) por país</h1>
-  <div class="hint" id="hint">Haz clic una vez para activar el audio. Luego pasa el mouse por una barra.</div>
+  <div class="hint" id="hint">Haz clic en 🔇 para habilitar audio. Luego pasa el mouse por una barra.</div>
   <div id="chart"></div>
 
 <script>
@@ -59,177 +71,58 @@
   const baseOpacity = Array(yValues.length).fill(0.9);
   const traceBars = {
     type:"bar", x:xLabels, y:yValues,
-    marker:{ color:xValues, colorscale:"Cividis", reversescale: true, cmin:minX, cmax:maxX, opacity:baseOpacity.slice(),
+    marker:{ color:xValues, colorscale:"Cividis", reversescale:true, cmin:minX, cmax:maxX, opacity:baseOpacity.slice(),
       colorbar:{ title:"Obesidad (%)", titleside:"top", orientation:"h", x:0.5, y:-0.3, xanchor:"center", yanchor:"top" },
       line:{ width:0.4, color:"#2b2b2b" } },
     hovertemplate:"<b>%{x}</b><br>Diabetes: %{y:.2f}%<br>Obesidad: %{marker.color:.2f}%<extra></extra>"
   };
 
-    const refs = [
-  { label: "10 %", country: "Philippines" },
-  { label: "20 %", country: "Liberia" },
-  { label: "30 %", country: "Libya" },
-  { label: "40 %", country: "Mexico" },
-];
+  const refs = [
+    { label:"10 %", country:"Philippines" },
+    { label:"20 %", country:"Liberia" },
+    { label:"30 %", country:"Libya" },
+    { label:"40 %", country:"Mexico" }
+  ];
 
   const vlines = refs
-  .map(r => ({ ...r, idx: xLabels.indexOf(r.country) }))
-  .filter(r => r.idx >= 0)
-  .map(r => ({ ...r, x: r.idx + 0.5 })); // borde derecho de la barra
+    .map(r => ({ ...r, idx: xLabels.indexOf(r.country) }))
+    .filter(r => r.idx >= 0)
+    .map(r => ({ ...r, x: r.idx + 0.5 }));
 
   const layout = {
-    margin: { t: 20, r: 30, b: 180, l: 60 },
-    xaxis: {
-      title: "País (ordenado por Obesidad, de menor a mayor)",
-      tickangle: -60, tickfont: { size: 10 }, automargin: true,
-      type: "category", categoryorder: "array", categoryarray: xLabels,
-      layer: "below traces", showspikes: false // Mantenemos esta en false
-    },
-    // MODIFICADO: Se actualizó el 'yaxis' para mostrar la línea horizontal (spike)
-    yaxis: {
-      title: "Diabetes (%)",
-      rangemode: "tozero",
-      layer: "below traces",
-      showspikes: true,     // 1. Habilitar spikes en el eje Y
-      spikemode: 'across',  // 2. Hacer que la línea cruce todo el gráfico
-      spikedash: 'dash',    // 3. Estilo de la línea (punteada)
-      spikecolor: '#555',   // 4. Color de la línea
-      spikethickness: 1     // 5. Grosor
-    },
-    bargap:0.2,
-    hovermode:"closest", // 'hovermode: closest' ya activa los spikes
-    hoverlabel: {
-      bgcolor: "#333333", // Un fondo oscuro (gris oscuro)
-      font: { color: "#ffffff" }, // Texto siempre blanco
-      bordercolor: "#666666"  // Un borde sutil
-    },
-    showlegend:false,
-    paper_bgcolor:"white",
-    plot_bgcolor:"white",
-    shapes: [
-  {
-    type: "line", xref: "paper", yref: "y",
-    x0: 0, x1: 1, y0: yMinTrend, y1: yMaxTrend,
-    line: { color: "blue", width: 2 }, layer: "above"
-  },
-  ...vlines.map(r => ({
-    type: "line",
-    xref: "x",
-    yref: "paper",
-    x0: r.x, x1: r.x,
-    y0: 0, y1: 1,
-    line: { color: "#9ca3af", width: 1.5, dash: "dot" },
-    layer: "above"
-  }))
-],
-  annotations: [
-  // Texto sobre la línea de tendencia
-  {
-    x: 0.535,
-    y: (yMinTrend + yMaxTrend) / 2 + 1,
-    xref: "paper",
-    yref: "y",
-    text: "Tendencia general → Más obesidad, más diabetes",
-    textangle: -8,
-    showarrow: false,
-    font: { size: 12, color: "blue" },
-    align: "center",
-    bgcolor: "#ffffff00",
-    opacity: 1
-  },
-
-  // Caja izquierda "menor obesidad y diabetes"
-  {
-    x: 0.02,
-    y: (yMinTrend + yMaxTrend) / 2 + 1,
-    xref: "paper",
-    yref: "y",
-    text: "Países con <b>menor</b> obesidad y diabetes",
-    showarrow: false,
-    font: { size: 12, color: "gray" },
-    align: "center",
-    bgcolor: "#fff",
-    opacity: 1
-  },
-
-  // Caja derecha "mayor obesidad y diabetes"
-  {
-    x: 1,
-    y: 26.4,
-    xref: "paper",
-    yref: "y",
-    text: "Países con <b>mayor</b> obesidad y diabetes",
-    showarrow: false,
-    font: { size: 12, color: "darkblue" },
-    align: "center",
-    bgcolor: "#fff",
-    opacity: 1
-  },
-
-  // Estrellas especiales (solo si existen esos índices)
-  ...(xLabels[51] ? [{
-    x: xLabels[51],
-    y: yValues[51],
-    text: "★",
-    showarrow: false,
-    font: { size: 24, color: "blue" },
-    xanchor: "center",
-    yanchor: "bottom"
-  }] : []),
-  ...(xLabels[33] ? [{
-    x: xLabels[33],
-    y: yValues[33],
-    text: "★",
-    showarrow: false,
-    font: { size: 24, color: "green" },
-    xanchor: "center",
-    yanchor: "bottom"
-  }] : []),
-
-  // Texto descriptivo de outliers (Aruba/Malasia)
-  {
-    x: 0.25,
-    y: 0.8,
-    xref: "paper",
-    yref: "paper",
-    text: "Países fuera de la norma:<br><span style='color:blue'>★</span> Aruba: mucha obesidad ↑ y poca diabetes ↓.<br><span style'color:green'>★</span> Malasia: menor obesidad ↓ y mucha diabetes ↑.",
-    showarrow: false,
-    font: { size: 12 },
-    xanchor: "center",
-    yanchor: "bottom",
-    bgcolor: "#fff",
-    opacity: 1
-  },
-
-  // Etiquetas de líneas verticales (vlines)
-  ...vlines.map(r => ({
-    xref: "x",
-    yref: "paper",
-    x: r.x,
-    y: 1,
-    text: r.label,
-    showarrow: false,
-    font: { size: 11, color: "#6b7280" },
-    xanchor: "center",
-    yanchor: "bottom"
-  }))
-]
+    margin:{ t:20, r:30, b:180, l:60 },
+    xaxis:{ title:"País (ordenado por Obesidad, de menor a mayor)", tickangle:-60, tickfont:{size:10}, automargin:true,
+            type:"category", categoryorder:"array", categoryarray:xLabels, layer:"below traces", showspikes:false },
+    yaxis:{ title:"Diabetes (%)", rangemode:"tozero", layer:"below traces",
+            showspikes:true, spikemode:"across", spikedash:"dash", spikecolor:"#555", spikethickness:1 },
+    bargap:0.2, hovermode:"closest",
+    hoverlabel:{ bgcolor:"#333333", font:{color:"#ffffff"}, bordercolor:"#666666" },
+    showlegend:false, paper_bgcolor:"white", plot_bgcolor:"white",
+    shapes:[
+      { type:"line", xref:"paper", yref:"y", x0:0, x1:1, y0:yMinTrend, y1:yMaxTrend, line:{color:"blue", width:2}, layer:"above" },
+      ...vlines.map(r => ({ type:"line", xref:"x", yref:"paper", x0:r.x, x1:r.x, y0:0, y1:1, line:{color:"#9ca3af", width:1.5, dash:"dot"}, layer:"above" }))
+    ],
+    annotations:[
+      { x:0.535, y:(yMinTrend+yMaxTrend)/2+1, xref:"paper", yref:"y", text:"Tendencia general → Más obesidad, más diabetes", textangle:-8, showarrow:false, font:{size:12, color:"blue"}, align:"center", bgcolor:"#ffffff00", opacity:1 },
+      { x:0.02, y:(yMinTrend+yMaxTrend)/2+1, xref:"paper", yref:"y", text:"Países con <b>menor</b> obesidad y diabetes", showarrow:false, font:{size:12, color:"gray"}, align:"center", bgcolor:"#fff", opacity:1 },
+      { x:1, y:26.4, xref:"paper", yref:"y", text:"Países con <b>mayor</b> obesidad y diabetes", showarrow:false, font:{size:12, color:"darkblue"}, align:"center", bgcolor:"#fff", opacity:1 },
+      ...(xLabels[51]?[{ x:xLabels[51], y:yValues[51], text:"★", showarrow:false, font:{size:24, color:"blue"}, xanchor:"center", yanchor:"bottom" }]:[]),
+      ...(xLabels[33]?[{ x:xLabels[33], y:yValues[33], text:"★", showarrow:false, font:{size:24, color:"green"}, xanchor:"center", yanchor:"bottom" }]:[]),
+      { x:0.25, y:0.8, xref:"paper", yref:"paper", text:"Países fuera de la norma:<br><span style='color:blue'>★</span> Aruba: mucha obesidad ↑ y poca diabetes ↓.<br><span style='color:green'>★</span> Malasia: menor obesidad ↓ y mucha diabetes ↑.", showarrow:false, font:{size:12}, xanchor:"center", yanchor:"bottom", bgcolor:"#fff", opacity:1 },
+      ...vlines.map(r => ({ xref:"x", yref:"paper", x:r.x, y:1, text:r.label, showarrow:false, font:{size:11, color:"#6b7280"}, xanchor:"center", yanchor:"bottom" }))
+    ]
   };
 
- const bassUrl   = new URL("audio/Bass.wav",    location.href).href;
- const maracaUrl = new URL("audio/Maraca.wav",  location.href).href;
-
-  const config = { staticPlot: false, responsive: true, displaylogo: false, displayModeBar: false };
   const chartDiv = document.getElementById("chart");
-  await Plotly.newPlot(chartDiv,[traceBars],layout,config);
+  await Plotly.newPlot(chartDiv,[traceBars],layout,{ staticPlot:false, responsive:true, displaylogo:false, displayModeBar:false });
 
   // ---- AUDIO ----
   const hint = document.getElementById("hint");
   const playBtn = document.getElementById("playBtn");
   const audioBtn = document.getElementById("audioBtn");
 
-  const bass = new Tone.Player({ url:bassUrl, fadeOut:0.05, loop:false, autostart:false }).toDestination();
-  const maraca = new Tone.Player({ url:maracaUrl, fadeOut:0.05, loop:false, autostart:false }).toDestination();
+  const bass = new Tone.Player({ url:"audio/Bass.wav",   fadeOut:0.05, loop:false, autostart:false }).toDestination();
+  const maraca = new Tone.Player({ url:"audio/Maraca.wav", fadeOut:0.05, loop:false, autostart:false }).toDestination();
   await Tone.loaded();
 
   function toPlaybackRate(v, vmin, vmax, semiMin=0, semiMax=12){
@@ -244,18 +137,52 @@
     Plotly.restyle(chartDiv,{ "marker.opacity":[op] },[0]);
   }
 
-  let audioEnabled=false;
-  async function unlockAudio(){
-    if(audioEnabled) return;
-    await Tone.start();
-    Tone.Destination.mute=false;
-    audioEnabled=true;
-    audioBtn.textContent="🔊";
-    hint.textContent="Audio activado. Pasa el mouse por una barra para oír el sample completo.";
+  // Estado de audio
+  let audioEnabled = false; // WebAudio unlocked
+  let audioOn = false;      // sonido activo (mute invertido)
+
+  async function ensureAudioContext(){
+    if (!audioEnabled) {
+      await Tone.start();
+      audioEnabled = true;
+    }
   }
 
-  document.addEventListener("pointerdown", unlockAudio, { once:true });
-  audioBtn.addEventListener("click", unlockAudio);
+  function updateAudioUI(){
+    audioBtn.textContent = audioOn ? "🔊" : "🔇";
+    audioBtn.setAttribute("aria-label", audioOn ? "Desactivar audio" : "Activar audio");
+    hint.textContent = audioOn
+      ? "Audio activado. Pasa el mouse por una barra o usa ▶."
+      : "Audio desactivado. Pulsa 🔇 para activarlo.";
+  }
+
+  function hardStopNow(){
+    const now = Tone.now();
+    try{ bass.stop(now); }catch{}
+    try{ maraca.stop(now); }catch{}
+  }
+
+  // Toggle audio: desbloquea si hace falta y conmuta mute
+audioBtn.addEventListener("click", async (e)=>{
+  e.preventDefault();
+  e.stopPropagation();
+
+  try{
+    await ensureAudioContext();                          // único unlock
+    // doble verificación del estado
+    if (Tone.getContext().state !== "running") {
+      await Tone.start();
+    }
+    audioOn = !audioOn;
+    Tone.Destination.mute = !audioOn;
+    if(!audioOn) hardStopNow();
+    updateAudioUI();
+    console.log("Audio is now", audioOn ? "ON" : "OFF");
+  }catch(err){
+    console.error("No se pudo iniciar audio:", err);
+  }
+});
+
 
   // ---- Secuencia tipo hover sin Transport ----
   let playing=false, timer=null, index=0;
@@ -266,52 +193,42 @@
     const i=index;
     const now = Tone.now();
 
-    // cortar cualquier resto antes de iniciar
-    try{ bass.stop(now); }catch{}
-    try{ maraca.stop(now); }catch{}
+    hardStopNow();
 
-    // MODIFICADO: Invertimos los semitonos (de 12 a 0) para el bajo (obesidad)
-    // Así, a mayor obesidad (valor 'x'), más grave (tono más bajo).
+    // bajo más grave con mayor obesidad
     bass.playbackRate   = toPlaybackRate(xValues[i], minX, maxX, 12, 0);
     maraca.playbackRate = toPlaybackRate(yValues[i], minYVal, maxYVal, 0, 12);
 
     setHighlight(i);
 
-    // exactamente 1s por barra
-    bass.start(now, 0, STEP);
-    maraca.start(now, 0, STEP);
+    // reproduce solo si audioOn
+    if (audioOn && !Tone.Destination.mute){
+      bass.start(now, 0, STEP);
+      maraca.start(now, 0, STEP);
+    }
 
     index++;
     if(index >= yValues.length){
-      // detener justo después de esta barra
       setTimeout(()=>{ stopSequence(); }, STEP*1000);
     }
   }
 
   async function startSequence(){
     if(playing) return;
-    if(!audioEnabled) await unlockAudio();
     playing=true; index=0;
 
     playBtn.classList.add("is-playing");
     playBtn.textContent="■";
 
-    tick(); // primera barra inmediato
-    timer = setInterval(()=>{ 
-      if(index < yValues.length) tick();
-    }, STEP*1000);
+    tick();
+    timer = setInterval(()=>{ if(index < yValues.length) tick(); }, STEP*1000);
   }
 
   function stopSequence(){
     if(!playing) return;
     playing=false;
     if(timer){ clearInterval(timer); timer=null; }
-
-    // cortar cualquier resto y limpiar UI
-    const now = Tone.now();
-    try{ bass.stop(now); }catch{}
-    try{ maraca.stop(now); }catch{}
-
+    hardStopNow();
     setHighlight(-1);
     playBtn.classList.remove("is-playing");
     playBtn.textContent="▶";
@@ -323,22 +240,19 @@
   let hoverIdx=null;
 
   function stopHoverSound(){
-    const now = Tone.now();
-    try{ bass.stop(now); }catch{}
-    try{ maraca.stop(now); }catch{}
+    hardStopNow();
     hoverIdx=null;
   }
 
   chartDiv.on("plotly_hover", ev=>{
-    if(!audioEnabled || playing || Tone.Destination.mute) return;
+    if(!audioEnabled || !audioOn || Tone.Destination.mute || playing) return;
     const p=ev?.points?.[0]; const idx=p?.pointIndex;
     if(!Number.isInteger(idx)) return;
     if(idx===hoverIdx && (bass.state==="started"||maraca.state==="started")) return;
 
     stopHoverSound();
-    
-    // MODIFICADO: Invertimos los semitonos (de 12 a 0) también para el hover del bajo
-    bass.playbackRate=toPlaybackRate(xValues[idx],minX,maxX, 12, 0);
+
+    bass.playbackRate=toPlaybackRate(xValues[idx],minX,maxX,12,0);
     maraca.playbackRate=toPlaybackRate(yValues[idx],minYVal,maxYVal,0,12);
 
     const now=Tone.now();
@@ -351,6 +265,9 @@
   chartDiv.on("plotly_unhover", ()=>{ stopHoverSound(); });
   chartDiv.addEventListener("mouseleave", ()=>{ stopHoverSound(); });
 
+  // Inicial
+  Tone.Destination.mute = true; // arranca silenciado
+  updateAudioUI();
 })();
 </script>
 </body>
