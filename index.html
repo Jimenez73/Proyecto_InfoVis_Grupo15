@@ -66,14 +66,131 @@
   };
 
   const layout = {
-    margin:{t:20,r:30,b:180,l:60},
-    xaxis:{ title:"País (ordenado por Obesidad)", tickangle:-60, tickfont:{size:10}, type:"category", categoryorder:"array", categoryarray:xLabels },
-    yaxis:{ title:"Diabetes (%)", rangemode:"tozero" },
-    bargap:0.2, hovermode:"closest", showlegend:false, paper_bgcolor:"white", plot_bgcolor:"white",
-    shapes:[{ type:"line", xref:"paper", yref:"y", x0:0, x1:1, y0:yMinTrend, y1:yMaxTrend, line:{color:"blue", width:2} }]
+    margin: { t: 20, r: 30, b: 180, l: 60 },
+xaxis: {
+      title: "País (ordenado por Obesidad, de menor a mayor)",
+      tickangle: -60, tickfont: { size: 10 }, automargin: true,
+      type: "category", categoryorder: "array", categoryarray: xLabels,
+      layer: "below traces", showspikes: false
+    },
+    yaxis: { title: "Diabetes (%)", rangemode: "tozero", layer: "below traces", showspikes: false },
+    bargap:0.2,
+    hovermode:"closest",
+    showlegend:false,
+    paper_bgcolor:"white",
+    plot_bgcolor:"white",
+    shapes: [
+  {
+    type: "line", xref: "paper", yref: "y",
+    x0: 0, x1: 1, y0: yMinTrend, y1: yMaxTrend,
+    line: { color: "blue", width: 2 }, layer: "above"
+  },
+  ...vlines.map(r => ({
+    type: "line",
+    xref: "x",
+    yref: "paper",
+    x0: r.x, x1: r.x,
+    y0: 0, y1: 1,
+    line: { color: "#9ca3af", width: 1.5, dash: "dot" },
+    layer: "above"
+  }))
+],
+  annotations: [
+  // Texto sobre la línea de tendencia
+  {
+    x: 0.535,
+    y: (yMinTrend + yMaxTrend) / 2 + 1,
+    xref: "paper",
+    yref: "y",
+    text: "Tendencia general → Más obesidad, más diabetes",
+    textangle: -8,
+    showarrow: false,
+    font: { size: 12, color: "blue" },
+    align: "center",
+    bgcolor: "#ffffff00",
+    opacity: 1
+  },
+
+  // Caja izquierda "menor obesidad y diabetes"
+  {
+    x: 0.02,
+    y: (yMinTrend + yMaxTrend) / 2 + 1,
+    xref: "paper",
+    yref: "y",
+    text: "Países con <b>menor</b> obesidad y diabetes",
+    showarrow: false,
+    font: { size: 12, color: "gray" },
+    align: "center",
+    bgcolor: "#fff",
+    opacity: 1
+  },
+
+  // Caja derecha "mayor obesidad y diabetes"
+  {
+    x: 1,
+    y: 26.4,
+    xref: "paper",
+    yref: "y",
+    text: "Países con <b>mayor</b> obesidad y diabetes",
+    showarrow: false,
+    font: { size: 12, color: "red" },
+    align: "center",
+    bgcolor: "#fff",
+    opacity: 1
+  },
+
+  // Estrellas especiales (solo si existen esos índices)
+  ...(xLabels[51] ? [{
+    x: xLabels[51],
+    y: yValues[51],
+    text: "★",
+    showarrow: false,
+    font: { size: 24, color: "blue" },
+    xanchor: "center",
+    yanchor: "bottom"
+  }] : []),
+  ...(xLabels[33] ? [{
+    x: xLabels[33],
+    y: yValues[33],
+    text: "★",
+    showarrow: false,
+    font: { size: 24, color: "green" },
+    xanchor: "center",
+    yanchor: "bottom"
+  }] : []),
+
+  // Texto descriptivo de outliers (Aruba/Malasia)
+  {
+    x: 0.25,
+    y: 0.8,
+    xref: "paper",
+    yref: "paper",
+    text: "Países fuera de la norma:<br><span style='color:blue'>★</span> Aruba: mucha obesidad ↑ y poca diabetes ↓.<br><span style='color:green'>★</span> Malasia: menor obesidad ↓ y mucha diabetes ↑.",
+    showarrow: false,
+    font: { size: 12 },
+    xanchor: "center",
+    yanchor: "bottom",
+    bgcolor: "#fff",
+    opacity: 1
+  },
+
+  // Etiquetas de líneas verticales (vlines)
+  ...vlines.map(r => ({
+    xref: "x",
+    yref: "paper",
+    x: r.x,
+    y: 1,
+    text: r.label,
+    showarrow: false,
+    font: { size: 11, color: "#6b7280" },
+    xanchor: "center",
+    yanchor: "bottom"
+  }))
+]
   };
 
-  const config = { responsive:true, displaylogo:false, displayModeBar:false };
+
+  const config = { staticPlot: false, responsive: true, displaylogo: false, displayModeBar: false };
   const chartDiv = document.getElementById("chart");
   await Plotly.newPlot(chartDiv,[traceBars],layout,config);
 
