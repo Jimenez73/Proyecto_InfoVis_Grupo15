@@ -201,6 +201,8 @@ xaxis: {
 ]
   };
 
+ const bassUrl   = new URL("./audio/Bass.wav",    location.href).href;
+ const maracaUrl = new URL("./audio/Maraca.wav",  location.href).href;
 
   const config = { staticPlot: false, responsive: true, displaylogo: false, displayModeBar: false };
   const chartDiv = document.getElementById("chart");
@@ -211,8 +213,8 @@ xaxis: {
   const playBtn = document.getElementById("playBtn");
   const audioBtn = document.getElementById("audioBtn");
 
-  const bass = new Tone.Player({ url:"./audio/Bass.wav", fadeOut:0.05, loop:false, autostart:false }).toDestination();
-  const maraca = new Tone.Player({ url:"./audio/Maraca.wav", fadeOut:0.05, loop:false, autostart:false }).toDestination();
+  const bass = new Tone.Player({ url:bassUrl, fadeOut:0.05, loop:false, autostart:false }).toDestination();
+  const maraca = new Tone.Player({ url:maracaUrl, fadeOut:0.05, loop:false, autostart:false }).toDestination();
   await Tone.loaded();
 
   function toPlaybackRate(v, vmin, vmax, semiMin=0, semiMax=12){
