@@ -211,8 +211,8 @@ xaxis: {
   const playBtn = document.getElementById("playBtn");
   const audioBtn = document.getElementById("audioBtn");
 
-  const bass = new Tone.Player({ url:"/audio/Bass.wav", fadeOut:0.05, loop:false, autostart:false }).toDestination();
-  const maraca = new Tone.Player({ url:"/audio/Maraca.wav", fadeOut:0.05, loop:false, autostart:false }).toDestination();
+  const bass = new Tone.Player({ url:"audio/Bass.wav", fadeOut:0.05, loop:false, autostart:false }).toDestination();
+  const maraca = new Tone.Player({ url:"audio/Maraca.wav", fadeOut:0.05, loop:false, autostart:false }).toDestination();
   await Tone.loaded();
 
   function toPlaybackRate(v, vmin, vmax, semiMin=0, semiMax=12){
