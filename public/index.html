@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Visualización PC: Rica en Datos</title>
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <script src="https://unpkg.com/tone@14.8.49/build/Tone.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
+  <style>
+    :root{--bg:#fff; --txt:#111;}
+    body{ font-family: system-ui, sans-serif; margin:0; padding:0; background:var(--bg); color:var(--txt); text-align: center; overflow: hidden;}
+    h1 { margin-top: 10px; font-size: 1.8rem; }
+    #chart { width: 95%; height: 85vh; margin: 0 auto; }
+    
+    .audio-control { position: fixed; top: 10px; left: 10px; z-index: 50; background: rgba(255,255,255,0.9); padding: 8px; border-radius: 8px; display: flex; gap: 10px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+    .btn { background: #eee; border: 1px solid #ccc; padding: 5px 10px; cursor: pointer; border-radius: 5px;}
+    .btn.active { background: #fee2e2; color: #ef4444; border-color: #ef4444; }
+    
+    /* MODAL */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .modal-overlay.show { opacity: 1; pointer-events: auto; }
+    .modal-card { background: white; width: 90%; max-width: 800px; max-height: 90vh; border-radius: 15px; overflow-y: auto; }
+    .modal-header { padding: 20px; background: #f8f9fa; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 15px;}
+    .flag-img { width: 60px; height: 40px; object-fit: cover; background: #ddd; border-radius: 4px;}
+    .modal-body { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: left;}
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .stat-item { background: #f9f9f9; padding: 10px; border-radius: 8px; }
+    .stat-val { font-size: 1.2rem; font-weight: bold; }
+    .disease-list { list-style: none; padding: 0; margin: 0; }
+    .disease-item { padding: 8px 0; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; font-size: 0.95rem;}
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; }
+
+    #qrModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 300; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    #qrModal.show { opacity: 1; pointer-events: auto; }
+    .qr-card { background: white; padding: 30px; border-radius: 20px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="audio-control">
+    <button id="audioBtn" class="btn">🔇 Audio</button>
+    <input type="range" id="volSlider" min="0" max="100" value="80" style="width:80px">
+    <button onclick="toggleQR()" class="btn" style="margin-left:10px;">📱 QR</button>
+  </div>
+
+  <h1>Obesidad (color) vs. Diabetes (altura) por país</h1>
+  <div id="chart"></div>
+
+  <div class="modal-overlay" id="detailModal">
+      <div class="modal-card">
+          <div class="modal-header"><img id="m-flag" class="flag-img" src="" alt="Flag"><h2 style="flex:1; margin:0" id="m-country">País</h2><button style="background:none;border:none;font-size:2rem;cursor:pointer" onclick="toggleModal()">×</button></div>
+          <div class="modal-body">
+              <div><h3>Indicadores</h3><div class="stat-grid"><div class="stat-item"><small>Obesidad</small><div id="m-obesity" class="stat-val">0%</div></div><div class="stat-item"><small>Diabetes</small><div id="m-diabetes" class="stat-val">0%</div></div><div class="stat-item"><small>Esperanza de Vida</small><div id="m-life" class="stat-val">--</div></div><div class="stat-item"><small>Población</small><div id="m-pop" class="stat-val">--</div></div><div class="stat-item" style="grid-column: span 2"><small>PIB</small><div id="m-gdp" class="stat-val">--</div></div></div>
+              <h3 style="margin-top:15px">Riesgos</h3><ul class="disease-list" id="m-diseases"></ul></div>
+              <div><h3>Mapa</h3><iframe id="m-map" style="width:100%;height:200px;border:0;border-radius:10px;background:#eee"></iframe></div>
+          </div>
+      </div>
+  </div>
+
+  <div id="qrModal" onclick="toggleQR()"><div class="qr-card" onclick="event.stopPropagation()"><h2>Escanea para Conectar</h2><div id="qrcode" style="margin:20px"></div><button class="btn" onclick="toggleQR()">Cerrar</button></div></div>
+
+<script>
+const state = { data: [], xValues: [], yValues: [], audioEnabled: false, currentIndex: 0, isModalOpen: false, isOverview: false, currentOpacity: null };
+const socket = io();
+const chartDiv = document.getElementById('chart');
+const audioBtn = document.getElementById('audioBtn');
+const volSlider = document.getElementById('volSlider');
+let qrGenerated = false;
+
+function getColor(val, type) { const v=parseFloat(val); const th=type==='diabetes'?{l:7,h:14}:{l:15,h:25}; if(v<th.l)return "#22c55e"; if(v<th.h)return "#eab308"; return "#ef4444"; }
+
+const audio = {
+  bass: null, maraca: null,
+  init: async () => { audio.bass = new Tone.Player("audio/Bass.wav").toDestination(); audio.maraca = new Tone.Player("audio/Maraca.wav").toDestination(); await Tone.loaded(); audio.setVolume(volSlider.value); },
+  play: (idx) => {
+    if (!state.audioEnabled || idx < 0 || state.isOverview) return;
+    const tX = (state.xValues[idx]-state.minX)/(state.maxX-state.minX); const tY = (state.yValues[idx]-state.minY)/(state.maxY-state.minY);
+    audio.bass.playbackRate = Math.pow(2, (12 - (tX * 12)) / 12); audio.maraca.playbackRate = Math.pow(2, (tY * 12) / 12);
+    try { audio.bass.stop(); audio.maraca.stop(); } catch(e){}
+    const now = Tone.now(); audio.bass.start(now); audio.maraca.start(now);
+  },
+  setVolume: (v) => Tone.Destination.volume.value = v<=0 ? -Infinity : 20*Math.log10(v/100),
+  toggle: async () => { if(!state.audioEnabled) { await Tone.start(); state.audioEnabled=true; Tone.Destination.mute=false; audioBtn.textContent="🔊 ON"; audioBtn.classList.add("active"); } else { Tone.Destination.mute = !Tone.Destination.mute; audioBtn.classList.toggle("active"); } }
+};
+audioBtn.addEventListener('click', audio.toggle); volSlider.addEventListener('input', e=>audio.setVolume(e.target.value));
+
+// --- LÓGICA DE FILTRADO Y RESET ---
+function applyFilter(category) {
+    if (category === null) {
+        // RESETEAR: Volver a modo navegación normal
+        state.currentOpacity = null;
+        // Forzar redibujado con el highlight del país actual
+        updateHighlight(state.currentIndex);
+        return;
+    }
+
+    // APLICAR FILTRO
+    let minO=0, maxO=100;
+    if(category==='low') maxO=15; 
+    else if(category==='mid') {minO=15; maxO=25;} 
+    else if(category==='high') minO=25;
+    
+    state.currentOpacity = state.xValues.map(val => (val >= minO && val <= maxO) ? 0.8 : 0.1);
+    Plotly.restyle(chartDiv, { "marker.opacity": [state.currentOpacity] }, [0]);
+    
+    // Sonido representativo
+    const repIdx = state.xValues.findIndex(val => val >= minO && val <= maxO);
+    if(repIdx !== -1) audio.play(repIdx);
+}
+
+function updateHighlight(idx) {
+    state.currentIndex = idx; state.isOverview = false;
+    
+    // Si hay filtro activo, usarlo. Si no, usar base transparente (0.25)
+    const baseOp = state.currentOpacity || Array(state.data.length).fill(0.25);
+    const finalOp = [...baseOp];
+    
+    // Si NO hay filtro activo, el seleccionado brilla (1.0) y el resto está apagado (0.25)
+    // Si HAY filtro activo, el seleccionado brilla (1.0) dentro de su grupo
+    finalOp[idx] = 1; 
+
+    Plotly.restyle(chartDiv, { "marker.opacity": [finalOp] }, [0]);
+    audio.play(idx);
+    if(state.isModalOpen) updateModalDetails();
+    socket.emit('pc-highlight-country', { name: state.data[idx].country, diabetes: state.yValues[idx].toFixed(1), obesity: state.xValues[idx].toFixed(1) });
+}
+
+async function updateModalDetails() {
+    const d = state.data[state.currentIndex];
+    document.getElementById('m-country').innerText = d.country;
+    document.getElementById('m-obesity').innerText = d.obesity.toFixed(1)+"%"; document.getElementById('m-obesity').style.color = getColor(d.obesity,'obesity');
+    document.getElementById('m-diabetes').innerText = d.diabetes.toFixed(1)+"%"; document.getElementById('m-diabetes').style.color = getColor(d.diabetes,'diabetes');
+    
+    // FIX: Campo de Esperanza de Vida
+    document.getElementById('m-life').innerText = d.life ? d.life + " años" : "N/A";
+    
+    document.getElementById('m-pop').innerText = d.pop ? Number(d.pop).toLocaleString() : "--";
+    document.getElementById('m-gdp').innerText = d.gdp ? "$"+Number(d.gdp).toLocaleString() : "--";
+    try { const res = await fetch(`https://restcountries.com/v3.1/name/${d.country}?fullText=false`); if(res.ok) { const j=await res.json(); if(j[0]){ document.getElementById('m-flag').src=j[0].flags.png; const [lat,lng]=j[0].latlng; document.getElementById('m-map').src=`https://maps.google.com/maps?q=${lat},${lng}&z=4&output=embed`; } } } catch(e){}
+    
+    // FIX: Limpieza de lista (evitar puntos vacíos)
+    const list = document.getElementById('m-diseases'); list.innerHTML = "";
+    const dis = (d.diseasesList && d.diseasesList.length) ? d.diseasesList : ["Resistencia a Insulina", d.obesity>25?"Dislipidemia":"Riesgo Bajo", d.diabetes>10?"Neuropatía":""];
+    
+    dis.slice(0,4).forEach(t => { 
+        if (t && t.trim() !== "") { // Solo agregar si tiene texto
+            list.innerHTML += `<li class="disease-item"><div class="dot"></div>${t}</li>`; 
+        }
+    });
+}
+
+socket.on('server-config', c => { if(!qrGenerated){ new QRCode(document.getElementById("qrcode"), {text:c.mobileUrl, width:200, height:200}); qrGenerated=true; } });
+socket.on('pc-step', d => updateHighlight(Math.min(Math.max(state.currentIndex+d,0), state.data.length-1)));
+socket.on('pc-toggle-details', () => { state.isModalOpen = !state.isModalOpen; state.isModalOpen ? (document.getElementById('detailModal').classList.add('show'), updateModalDetails()) : (document.getElementById('detailModal').classList.remove('show'), updateHighlight(state.currentIndex)); });
+socket.on('pc-set-volume', v => { volSlider.value=v; audio.setVolume(v); });
+socket.on('pc-toggle-overview', () => { 
+    state.isOverview = !state.isOverview; 
+    const op = Array(state.data.length).fill(state.isOverview ? 1 : 0.25); 
+    if(!state.isOverview && !state.currentOpacity) op[state.currentIndex] = 1;
+    // Si hay filtro, restaurar filtro al salir de overview
+    if(!state.isOverview && state.currentOpacity) { 
+        Plotly.restyle(chartDiv, {"marker.opacity":[state.currentOpacity]}, [0]);
+    } else {
+        Plotly.restyle(chartDiv, {"marker.opacity":[op]}, [0]); 
+    }
+});
+socket.on('pc-apply-filter', cat => applyFilter(cat));
+
+window.toggleQR = () => document.getElementById('qrModal').classList.toggle('show');
+window.toggleModal = () => socket.emit('request-details'); 
+
+(async function init() {
+  const res = await fetch("datos/datos.json"); const raw = await res.json();
+  const rows = raw.map(d => ({ country: d.Country, obesity: +d.All_adults_Obesity, diabetes: +d.All_adults_Diabetes, pop: d.Population, gdp: d.PIB, life: d.Life_expectancy })).filter(d=>!isNaN(d.obesity));
+  rows.sort((a,b) => a.obesity - b.obesity);
+  state.data = rows; state.xValues = rows.map(r=>r.obesity); state.yValues = rows.map(r=>r.diabetes);
+  state.minX = Math.min(...state.xValues); state.maxX = Math.max(...state.xValues); state.minY = Math.min(...state.yValues); state.maxY = Math.max(...state.yValues);
+
+  const n=state.xValues.length, mx=state.xValues.reduce((a,b)=>a+b,0)/n, my=state.yValues.reduce((a,b)=>a+b,0)/n;
+  let num=0, den=0; for(let i=0;i<n;i++){num+=(state.xValues[i]-mx)*(state.yValues[i]-my);den+=(state.xValues[i]-mx)**2;}
+  const b=num/den, a=my-b*mx; const yMinTrend = a + b*state.minX, yMaxTrend = a + b*state.maxX;
+  
+  const refs = [{l:"10%",c:"Philippines"},{l:"20%",c:"Liberia"},{l:"30%",c:"Libya"},{l:"40%",c:"Mexico"}];
+  const xLabels = rows.map(r=>r.country);
+  const vlines = refs.map(r => { const idx = xLabels.indexOf(r.c); return idx >= 0 ? { ...r, x: idx + 0.5 } : null; }).filter(x=>x);
+
+  const trace = { 
+      type: "bar", x: xLabels, y: state.yValues, 
+      marker: { 
+          color: state.xValues, colorscale: "Cividis", reversescale: true, 
+          line:{width:0.5, color:"#333"},
+          // FIX: Aumentamos el offset negativo de la barra de colores para evitar solapamiento
+          colorbar: { title:"Obesidad (%)", titleside:"top", orientation:"h", x:0.5, y:-0.5 } 
+      },
+      hovertemplate:"<b>%{x}</b><br>Diabetes: %{y:.2f}%<br>Obesidad: %{marker.color:.2f}%<extra></extra>"
+  };
+
+  const layout = { 
+      // FIX: Aumentamos margen inferior a 220px
+      margin: {t:30,r:30,b:220,l:60}, 
+      xaxis: { title: "País (ordenado por Obesidad)", tickangle:-60, tickfont:{size:10}, fixedrange:true }, 
+      yaxis: { title: "Diabetes (%)", fixedrange:true, showspikes:true, spikemode:'across', spikedash:'dash', spikecolor:'#555', spikethickness:1 }, 
+      showlegend:false, hovermode: "closest",
+      shapes: [
+          {type:"line", xref:"paper", yref:"y", x0:0, x1:1, y0:yMinTrend, y1:yMaxTrend, line:{color:"blue", width:2}, layer:"above"},
+          ...vlines.map(r => ({ type: "line", xref: "x", yref: "paper", x0: r.x, x1: r.x, y0: 0, y1: 1, line: { color: "#9ca3af", width: 1.5, dash: "dot" }, layer: "above" }))
+      ],
+      annotations: [
+        { x: 0.5, y: (yMinTrend+yMaxTrend)/2 + 1, xref: "paper", yref: "y", text: "Tendencia general → Más obesidad, más diabetes", textangle: -8, font: {color: "blue"}, showarrow: false },
+        { x: 0.02, y: (yMinTrend+yMaxTrend)/2 + 1, xref: "paper", yref: "y", text: "Países con <b>menor</b> obesidad", font: {color: "gray"}, showarrow: false, align:"left" },
+        { x: 0.98, y: 26, xref: "paper", yref: "y", text: "Países con <b>mayor</b> obesidad", font: {color: "darkblue"}, showarrow: false, align:"right" },
+        { x: 0.25, y: 0.85, xref: "paper", yref: "paper", text: "Países fuera de norma:<br><span style='color:blue'>★</span> Aruba<br><span style='color:green'>★</span> Malasia", showarrow: false, bgcolor: "#fff", bordercolor: "#ccc" },
+        ...vlines.map(r => ({ xref: "x", yref: "paper", x: r.x, y: 1, text: r.l, showarrow: false, font: { size: 11, color: "#6b7280" }, yanchor: "bottom" }))
+      ]
+  };
+
+  await Plotly.newPlot(chartDiv, [trace], layout, {responsive:true, displayModeBar:false});
+  await audio.init();
+  updateHighlight(0);
+})();
+</script>
+</body>
+</html>
